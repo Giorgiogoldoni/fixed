@@ -5,57 +5,88 @@
     <title>RAPTOR – Link ETF</title>
     <style>
         body {
+            margin: 0;
             font-family: 'Segoe UI', Arial, sans-serif;
             background: #ffffff;
-            margin: 0;
-            padding: 0;
             color: #222;
         }
 
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            border-bottom: 1px solid #eee;
+        /* MENU LATERALE */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 220px;
+            height: 100%;
+            background: #003366;
+            color: white;
+            padding-top: 30px;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.2);
         }
 
-        .logo {
-            width: 120px;
-            margin-bottom: 10px;
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar a:hover {
+            background: #0055a5;
+            border-left: 4px solid #ffcc00;
+        }
+
+        /* CONTENUTO PRINCIPALE */
+        .main {
+            margin-left: 240px;
+            padding: 30px;
         }
 
         h1 {
-            margin: 0;
             font-size: 34px;
-            font-weight: 600;
+            margin-bottom: 5px;
         }
 
         .subtitle {
             color: #666;
-            margin-top: 5px;
-            font-size: 16px;
+            margin-bottom: 30px;
         }
 
+        h2 {
+            margin-top: 50px;
+            font-size: 26px;
+            padding-left: 10px;
+            border-left: 6px solid #0055a5;
+        }
+
+        /* CARD */
         .container {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 0 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 25px;
+            margin-top: 20px;
         }
 
         .card {
             background: #fafafa;
             border-radius: 14px;
             padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
             text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: 0.2s;
         }
 
         .card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
         }
 
         .card img {
@@ -73,41 +104,128 @@
             text-decoration: none;
         }
 
-        .card a:hover {
-            text-decoration: underline;
+        /* FOOTER */
+        footer {
+            margin-top: 60px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
         }
     </style>
 </head>
 
 <body>
 
-<header>
-    <img class="logo" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Raptor Logo">
+<!-- MENU LATERALE -->
+<div class="sidebar">
+    <h2>RAPTOR</h2>
+    <a href="#analisi">Analisi</a>
+    <a href="#grafici">Grafici</a>
+    <a href="#portafogli">Portafogli</a>
+    <a href="#tematici">ETF Tematici</a>
+    <a href="#settoriali">ETF Settoriali</a>
+    <a href="#paesi">ETF Paesi</a>
+    <a href="#strumenti">Strumenti</a>
+</div>
+
+<!-- CONTENUTO PRINCIPALE -->
+<div class="main">
+
     <h1>RAPTOR – Link ETF</h1>
     <div class="subtitle">Dashboard professionale per analisi ETF</div>
-</header>
 
-<div class="container">
+    <!-- ANALISI -->
+    <h2 id="analisi">Analisi</h2>
+    <div class="container">
 
-    <div class="card">
-        <img src="https://cdn-icons-png.flaticon.com/512/2331/2331949.png" alt="Consigli Preview">
-        <a href="RAPTOR_Advice (1).html">RAPTOR Consigli</a>
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png">
+            <a href="RAPTOR_Advice (1).html" target="_blank">RAPTOR Consigli</a>
+        </div>
+
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616430.png">
+            <a href="RAPTOR_Ranking.html" target="_blank">RAPTOR Ranking</a>
+        </div>
+
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png">
+            <a href="etf-heatmap-ishares (2).html" target="_blank">ETF Heatmap iShares</a>
+        </div>
+
     </div>
 
-    <div class="card">
-        <img src="https://cdn-icons-png.flaticon.com/512/992/992651.png" alt="Ranking Preview">
-        <a href="RAPTOR_Ranking.html">RAPTOR Ranking</a>
+    <!-- GRAFICI -->
+    <h2 id="grafici">Grafici</h2>
+    <div class="container">
+
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png">
+            <a href="RAPTOR_Advanced.html" target="_blank">Dashbord Grafico</a>
+        </div>
+
     </div>
 
-    <div class="card">
-        <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="Heatmap Preview">
-        <a href="etf-heatmap-ishares (2).html">ETF Heatmap iShares</a>
+    <!-- PORTAFOGLI -->
+    <h2 id="portafogli">Portafogli</h2>
+    <div class="container">
+
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616430.png">
+            <a href="#" target="_blank">Lazy Portfolio</a>
+        </div>
+
     </div>
 
-    <div class="card">
-        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" alt="Dashboard Preview">
-        <a href="RAPTOR_Dashboard.html">RAPTOR Dashboard</a>
+    <!-- TEMATICI -->
+    <h2 id="tematici">ETF Tematici</h2>
+    <div class="container">
+
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png">
+            <a href="#" target="_blank">Tematici</a>
+        </div>
+
     </div>
+
+    <!-- SETTORIALI -->
+    <h2 id="settoriali">ETF Settoriali</h2>
+    <div class="container">
+
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png">
+            <a href="#" target="_blank">Settoriali</a>
+        </div>
+
+    </div>
+
+    <!-- PAESI -->
+    <h2 id="paesi">ETF Paesi</h2>
+    <div class="container">
+
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616430.png">
+            <a href="#" target="_blank">Paesi</a>
+        </div>
+
+    </div>
+
+    <!-- STRUMENTI -->
+    <h2 id="strumenti">Strumenti Vari</h2>
+    <div class="container">
+
+        <div class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png">
+            <a href="#" target="_blank">Strumenti</a>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        © 2026 Giorgio Goldoni – RAPTOR ETF Dashboard  
+    </footer>
 
 </div>
 
