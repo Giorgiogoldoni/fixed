@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>🦅 RAPTOR Advanced Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -79,14 +80,31 @@ canvas{display:block}
 .cats{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
 .cat-btn{background:#fff;border:1px solid #e2e8f0;color:#64748b;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:9px;font-family:inherit}
 .cat-btn:hover,.cat-btn.act{background:#eff6ff;border-color:#3b82f6;color:#2563eb}
+
+.btn-excel-adv{
+  background:#16a34a;border:none;color:#fff;
+  padding:6px 14px;border-radius:6px;cursor:pointer;
+  font-size:12px;font-weight:700;margin:6px 0 4px 0;
+  display:inline-block;transition:filter .15s;
+}
+.btn-excel-adv:hover{filter:brightness(1.1)}
+
+
+/* P6 Heikin-Ashi */
+#p6Wrap{width:100%;height:320px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;}
+.ha-legend{display:flex;gap:12px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-bottom:none;border-radius:6px 6px 0 0;font-size:10px;flex-wrap:wrap;align-items:center;}
+.ha-legend span{display:flex;align-items:center;gap:4px;}
+.ha-dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="hdr">
   <div>
     <h1>🦅 RAPTOR ADVANCED</h1>
     <div class="sub">KAMA · AO · RSI · LONG · MEAN REVERSION · 714 TICKER</div>
-    <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:'JetBrains Mono',monospace">v2.1 &nbsp;·&nbsp; 06/03/2026</div>
+    <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:'JetBrains Mono',monospace">v2.2 &nbsp;·&nbsp; 08/03/2026</div>
   </div>
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
     <a href="RAPTOR_Ranking.html" style="display:inline-flex;align-items:center;gap:5px;background:#2563eb;color:#fff;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;font-family:inherit">🏆 RANKING LIVE</a>
@@ -245,6 +263,20 @@ canvas{display:block}
 <div class="chart-section">
   <div class="chart-title">P5 — RIBASSO: MAX(0, KAMA − PREZZO)</div>
   <div class="chart-wrap"><canvas id="c5" height="60"></canvas></div>
+</div>
+
+
+<!-- ── PANNELLO 6: Heikin-Ashi Candlestick ── -->
+<div class="chart-section" id="p6Section">
+  <div class="chart-title">P6 — HEIKIN-ASHI CANDLESTICK</div>
+  <div class="ha-legend">
+    <span><span class="ha-dot" style="background:#22c55e"></span> Rialzo (no shadow inf.)</span>
+    <span><span class="ha-dot" style="background:#86efac"></span> Rialzo (con shadow)</span>
+    <span><span class="ha-dot" style="background:#ef4444"></span> Ribasso (no shadow sup.)</span>
+    <span><span class="ha-dot" style="background:#fca5a5"></span> Ribasso (con shadow)</span>
+    <span id="haLegendSignal" style="margin-left:auto;font-weight:700;"></span>
+  </div>
+  <div id="p6Wrap"></div>
 </div>
 
 <!-- Position Sizing -->
@@ -454,6 +486,89 @@ function fDate(ts){return new Date(ts*1000).toLocaleDateString('it-IT',{day:'2-d
 // ═══════════════════════════════════════════════════════
 // LOAD DATA
 // ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════
+//  P6 — HEIKIN-ASHI LIGHTWEIGHT CHART
+// ═══════════════════════════════════════════
+let p6Chart = null;
+let p6Series = null;
+
+function buildP6(haO, haH, haL, haC, timestamps) {
+  const wrap = document.getElementById('p6Wrap');
+  if (!wrap) return;
+
+  // Distruggi chart precedente se esiste
+  if (p6Chart) { p6Chart.remove(); p6Chart = null; p6Series = null; }
+
+  p6Chart = LightweightCharts.createChart(wrap, {
+    width: wrap.clientWidth || 800,
+    height: 320,
+    layout: { background: { color: '#ffffff' }, textColor: '#475569' },
+    grid: { vertLines: { color: '#f1f5f9' }, horzLines: { color: '#f1f5f9' } },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: '#e2e8f0' },
+    timeScale: { borderColor: '#e2e8f0', timeVisible: true, secondsVisible: false },
+    handleScroll: true,
+    handleScale: true,
+  });
+
+  p6Series = p6Chart.addCandlestickSeries({
+    upColor: '#22c55e',
+    downColor: '#ef4444',
+    borderUpColor: '#16a34a',
+    borderDownColor: '#dc2626',
+    wickUpColor: '#16a34a',
+    wickDownColor: '#dc2626',
+  });
+
+  // Costruisci dati con timestamp Unix (secondi)
+  const candleData = [];
+  for (let i = 0; i < haC.length; i++) {
+    if (haC[i] == null || haO[i] == null) continue;
+    // timestamps è array di Date o epoch ms
+    const ts = typeof timestamps[i] === 'number' ? Math.floor(timestamps[i]) : Math.floor(new Date(timestamps[i]).getTime() / 1000);
+    const isUp = haC[i] >= haO[i];
+    const noLowerShadow = haL[i] === Math.min(haO[i], haC[i]);
+    const noUpperShadow = haH[i] === Math.max(haO[i], haC[i]);
+
+    candleData.push({
+      time: ts,
+      open: +haO[i].toFixed(4),
+      high: +haH[i].toFixed(4),
+      low:  +haL[i].toFixed(4),
+      close:+haC[i].toFixed(4),
+      // colore per forza trend
+      color: isUp ? (noLowerShadow ? '#22c55e' : '#86efac') : (noUpperShadow ? '#ef4444' : '#fca5a5'),
+      borderColor: isUp ? '#16a34a' : '#dc2626',
+      wickColor: isUp ? '#16a34a' : '#dc2626',
+    });
+  }
+
+  // Rimuovi duplicati per timestamp e ordina
+  const seen = new Set();
+  const unique = candleData.filter(d => { if(seen.has(d.time)) return false; seen.add(d.time); return true; });
+  unique.sort((a,b) => a.time - b.time);
+
+  p6Series.setData(unique);
+  p6Chart.timeScale().fitContent();
+
+  // Aggiorna legenda segnale
+  const last = unique[unique.length - 1];
+  const sigEl = document.getElementById('haLegendSignal');
+  if (sigEl && last) {
+    const up = last.close >= last.open;
+    const strong = up ? (last.low === Math.min(last.open, last.close)) : (last.high === Math.max(last.open, last.close));
+    sigEl.textContent = up ? (strong ? '🟢 RIALZO FORTE' : '🟢 Rialzo') : (strong ? '🔴 RIBASSO FORTE' : '🔴 Ribasso');
+    sigEl.style.color = up ? '#16a34a' : '#dc2626';
+  }
+
+  // Resize responsive
+  const ro = new ResizeObserver(() => {
+    if (p6Chart && wrap.clientWidth > 0) p6Chart.applyOptions({ width: wrap.clientWidth });
+  });
+  ro.observe(wrap);
+}
+
 async function loadData(){
   const t=document.getElementById('tkSearch').value.trim().toUpperCase()||currentTicker;
   if(!t)return;
@@ -470,23 +585,34 @@ async function loadData(){
   try{
     const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=${currentIv}&range=${currentRange}&includePrePost=false`;
     // Proxy multipli — tenta in sequenza fino al primo che risponde
-    const PROXIES = [
-      'https://corsproxy.io/?'+encodeURIComponent(url),
-      'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
-      'https://thingproxy.freeboard.io/fetch/'+url,
+    const PROXY_FNS = [
+      async () => {
+        const r=await fetch('https://corsproxy.io/?'+encodeURIComponent(url),{signal:AbortSignal.timeout(9000)});
+        if(!r.ok) throw 'ko';
+        return r.json();
+      },
+      async () => {
+        const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(9000)});
+        if(!r.ok) throw 'ko';
+        const t2=await r.text();
+        const j2=JSON.parse(t2);
+        return j2.contents?JSON.parse(j2.contents):j2;
+      },
+      async () => {
+        const r=await fetch('https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url),{signal:AbortSignal.timeout(9000)});
+        if(!r.ok) throw 'ko';
+        return r.json();
+      },
     ];
     let json=null, lastErr='';
-    for(const proxy of PROXIES){
+    for(const fn of PROXY_FNS){
       try{
         document.getElementById('loadMsg').textContent='⏳ Caricamento '+t+'...';
-        const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-        if(!res.ok){ lastErr='HTTP '+res.status; continue; }
-        const j=await res.json();
-        // allorigins wraps in {contents:...}
-        const raw = j.contents ? JSON.parse(j.contents) : j;
+        const j=await fn();
+        const raw=j.contents?JSON.parse(j.contents):j;
         if(raw.chart?.result?.[0]){ json=raw; break; }
-        lastErr='Nessun dato da '+proxy;
-      }catch(e2){ lastErr=e2.message; continue; }
+        lastErr='Nessun dato';
+      }catch(e2){ lastErr=e2?.message||String(e2); continue; }
     }
     if(!json) throw new Error('Dati non disponibili per '+t+'. Verifica il simbolo (es. ENI.MI, SPY, AAPL). Dettaglio: '+lastErr);
     const r=json.chart.result[0];
@@ -495,6 +621,23 @@ async function loadData(){
     document.getElementById('loadMsg').style.display='none';
     const eb=document.getElementById('errBox');
     eb.textContent='⚠️ '+e.message;eb.style.display='block';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// HA TOGGLE — globale
+// ═══════════════════════════════════════════════════════
+let showHA=false;
+function toggleHA(){
+  showHA=!showHA;
+  const btn=document.getElementById('btnHA');
+  const mode=document.getElementById('cHaMode');
+  if(showHA){btn.style.background='#1a3a2a';btn.style.color='#3fb950';btn.style.borderColor='#238636';btn.textContent='HA ATTIVO';mode.textContent='Heikin-Ashi';}
+  else{btn.style.background='#161b22';btn.style.color='#8b949e';btn.style.borderColor='#30363d';btn.textContent='CANDELE NORM.';mode.textContent='Linea prezzo';}
+  if(charts.c1){
+    charts.c1.data.datasets[0].hidden=showHA;
+    charts.c1.data.datasets[4].hidden=!showHA;
+    charts.c1.update('none');
   }
 }
 
@@ -526,20 +669,32 @@ function processData(r,sym,info){
   // P<KAMA
   const pkama=cs.map((c,i)=>kama[i]!=null?Math.max(0,kama[i]-c):null);
 
+  // Ultimi valori
+  const last=n-1;
+  const lc=cs[last],lk=kama[last],lr=rsi[last],latr=atr[last],ler=er[last];
+  const lao=ao[last],lao1=ao[last-1];
+  const ltc=tc[last],ltc1=tc[last-1]??0;
+  const lef=ef21[last],lel=el55[last];
+  const lmm20=mm20[last],lmm50=mm50[last],lmm200=mm200[last];
+  const prevClose=meta.chartPreviousClose||meta.regularMarketPreviousClose;
+
   // ── HEIKIN-ASHI ──────────────────────────────────────
   const os=valid.map(x=>x.o);
   const haC=[], haO=[], haH=[], haL=[];
   for(let i=0;i<cs.length;i++){
     const hc=(os[i]+hs[i]+ls[i]+cs[i])/4;
     const ho=i===0?(os[i]+cs[i])/2:(haO[i-1]+haC[i-1])/2;
-    haC.push(hc);
-    haO.push(ho);
+    haC.push(hc); haO.push(ho);
     haH.push(Math.max(hs[i],ho,hc));
     haL.push(Math.min(ls[i],ho,hc));
   }
 
+  // ── COSTRUISCI P6 ──────────────────────────────────────
+  // Usa timestamp Unix secondi
+  const p6Timestamps = valid.map(x => x.t); // x.t è già epoch seconds
+  buildP6(haO, haH, haL, haC, p6Timestamps);
+
   // ── PIVOT POINTS (Classico) ───────────────────────────
-  // Calcolato sull'ultimo giorno completo (penultima candela)
   const pi=n-2>=0?n-2:0;
   const pivH=hs[pi], pivL=ls[pi], pivC=cs[pi];
   const pivot=(pivH+pivL+pivC)/3;
@@ -549,24 +704,11 @@ function processData(r,sym,info){
   const pivS2=pivot-(pivH-pivL);
 
   // ── TENDENZA B/M/L ────────────────────────────────────
-  const lastHA=haC.length-1;
-  // Breve: HA ultimi 5 — quante chiusure HA crescenti
   const haShort5=haC.slice(-5);
   const haUp5=haShort5.filter((v,i)=>i>0&&v>haShort5[i-1]).length;
   const trendShort=haUp5>=3?'↑':haUp5<=1?'↓':'→';
-  // Medio: MM20 vs MM50
   const trendMed=lmm20!=null&&lmm50!=null?(lmm20>lmm50?'↑':lmm20<lmm50?'↓':'→'):'→';
-  // Lungo: MM50 vs MM200
   const trendLong=lmm50!=null&&lmm200!=null?(lmm50>lmm200?'↑':lmm50<lmm200?'↓':'→'):'→';
-
-  // Ultimi valori
-  const last=n-1;
-  const lc=cs[last],lk=kama[last],lr=rsi[last],latr=atr[last],ler=er[last];
-  const lao=ao[last],lao1=ao[last-1];
-  const ltc=tc[last],ltc1=tc[last-1]??0;
-  const lef=ef21[last],lel=el55[last];
-  const lmm20=mm20[last],lmm50=mm50[last],lmm200=mm200[last];
-  const prevClose=meta.chartPreviousClose||meta.regularMarketPreviousClose;
   const livePrice=meta.regularMarketPrice||lc;
   const chgPct=prevClose?(livePrice-prevClose)/prevClose:null;
 
@@ -753,21 +895,6 @@ function processData(r,sym,info){
     }
   };
 
-  // HA toggle state
-  let showHA=false;
-  function toggleHA(){
-    showHA=!showHA;
-    const btn=document.getElementById('btnHA');
-    const mode=document.getElementById('cHaMode');
-    if(showHA){btn.style.background='#1a3a2a';btn.style.color='#3fb950';btn.style.borderColor='#238636';btn.textContent='HA ATTIVO';mode.textContent='Heikin-Ashi';}
-    else{btn.style.background='#161b22';btn.style.color='#8b949e';btn.style.borderColor='#30363d';btn.textContent='CANDELE NORM.';mode.textContent='Linea prezzo';}
-    if(charts.c1){
-      charts.c1.data.datasets[0].hidden=showHA;
-      charts.c1.data.datasets[4].hidden=!showHA;
-      charts.c1.update('none');
-    }
-  }
-
   // Plugin linee Pivot
   const pivotPlugin={
     id:'pivotLines',
@@ -932,7 +1059,7 @@ function processData(r,sym,info){
 // ═══════════════════════════════════════════════════════
 // RANKING LOGIC
 // ═══════════════════════════════════════════════════════
-let rankFilter='ALL', rankSort='score', rankDir=-1;
+let rankFilter='ALL', rankSort='data', rankDir=-1;
 
 function showTab(tab){
   document.getElementById('tabChart').classList.toggle('act', tab==='chart');
@@ -959,6 +1086,22 @@ function buildRankFilters(){
     b.onclick=()=>{rankFilter=c;document.querySelectorAll('.rf').forEach(x=>x.classList.remove('act'));b.classList.add('act');renderRanking();};
     bar.appendChild(b);
   });
+  // Separatore + bottoni uscita
+  bar.innerHTML+='<span style="color:#21262d;padding:0 4px">|</span>';
+  [
+    {key:'STOP',  label:'⛔ STOP',      bg:'#fee2e2',col:'#991b1b'},
+    {key:'USCITA',label:'🔴 USCITA',    bg:'#fff7ed',col:'#9a3412'},
+    {key:'ATT',   label:'🟡 ATTENZIONE',bg:'#fffbeb',col:'#92400e'},
+  ].forEach(({key,label,bg,col})=>{
+    const cnt=RANKING.filter(r=>r.uscita&&r.uscita.toUpperCase().includes(key==='ATT'?'ATTENZIONE':key)).length;
+    const b=document.createElement('button');
+    b.className='rf';
+    b.style.cssText=`background:${bg};color:${col};border-color:${col}`;
+    b.textContent=label+' ('+cnt+')';
+    b.dataset.ukey=key;
+    b.onclick=()=>{rankFilter='__'+key;document.querySelectorAll('.rf').forEach(x=>x.classList.remove('act'));b.classList.add('act');renderRanking();};
+    bar.appendChild(b);
+  });
 }
 
 function dateVal(s){
@@ -971,8 +1114,46 @@ function sortRank(col){
   renderRanking();
 }
 
+
+// ═══════════════════════════════════════
+//  EXPORT EXCEL RANKING
+// ═══════════════════════════════════════
+function exportRankingExcel(){
+  if(!RANKING||!RANKING.length){alert('Nessun dato ranking — vai su Ranking Live e calcola prima.');return;}
+  let rows=rankFilter==='ALL'?[...RANKING]:RANKING.filter(r=>r.tipo===rankFilter||r.cat===rankFilter);
+  // sort by score desc
+  rows.sort((a,b)=>(b.score||0)-(a.score||0));
+  const data=[['#','TICKER','CATEGORIA','SEGNALE','SCORE','TRENDYCATOR','ER','P/K%','AO>0','BAFFETTI','SETT%','MESE%','DATA ING.','USCITA']];
+  rows.forEach((r,i)=>{
+    data.push([
+      i+1, r.ticker||r.display||'', r.cat||r.categoria||'',
+      r.tipo||'', r.score||0, r.stato||'',
+      r.er!=null?r.er:'', r.pk!=null?r.pk:'',
+      r.ao!=null?(r.ao>0?'SI':'NO'):'', r.baff!=null?r.baff:'',
+      r.sett!=null?r.sett:'', r.mese!=null?r.mese:'',
+      r.data||r.entryDate||'', r.uscita||''
+    ]);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:4},{wch:10},{wch:18},{wch:8},{wch:7},{wch:10},{wch:6},{wch:7},{wch:6},{wch:7},{wch:8},{wch:8},{wch:11},{wch:11}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'RAPTOR Ranking');
+  const now=new Date();
+  const d=now.getDate().toString().padStart(2,'0')+'_'+(now.getMonth()+1).toString().padStart(2,'0')+'_'+now.getFullYear();
+  XLSX.writeFile(wb,'RAPTOR_Advanced_Ranking_'+d+'.xlsx');
+}
+
 function renderRanking(){
-  let data=rankFilter==='ALL'?[...RANKING]:RANKING.filter(r=>r.tipo===rankFilter||r.cat===rankFilter);
+  let data;
+  if(rankFilter==='ALL') data=[...RANKING];
+  else if(rankFilter==='__STOP')   data=RANKING.filter(r=>r.uscita&&r.uscita.includes('STOP'));
+  else if(rankFilter==='__USCITA') data=RANKING.filter(r=>r.uscita&&r.uscita.includes('USCITA'));
+  else if(rankFilter==='__ATT')    data=RANKING.filter(r=>r.uscita&&r.uscita.includes('ATTENZIONE'));
+  else data=RANKING.filter(r=>r.tipo===rankFilter||r.cat===rankFilter);
+  // Per ALL ordina per data ingresso desc, altrimenti per score
+  if(rankFilter==='ALL' && rankSort==='data') {
+    data.sort((a,b)=>dateVal(String(b.data||''))-dateVal(String(a.data||'')));
+  }
   function dateVal(s){
     if(!s||s==='—') return 0;
     const p=s.split('/');
@@ -1011,6 +1192,7 @@ function renderRanking(){
       <td class="${r.mese>0?'pos':'neg'}">${r.mese>0?'+':''}${r.mese.toFixed(2)}%</td>
       <td style="color:#484f58;font-size:10px">${r.cat}</td>
       <td style="color:#30363d;font-size:9px">${r.data}</td>
+      <td>${r.uscita?`<span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;${r.uscita.includes('STOP')?'background:#fee2e2;color:#dc2626':r.uscita.includes('USCITA')?'background:#fff7ed;color:#ea580c':'background:#fffbeb;color:#92400e'}">${r.uscita}</span>`:''}</td>
     </tr>`;
   }).join('');
   if(!document.getElementById('rankFilters').children.length) buildRankFilters();
@@ -1116,6 +1298,7 @@ setTimeout(()=>{
     <span><span class="tipo-rosso">⚪ ROSSO+</span> — inversione potenziale</span>
   </div>
   <div class="rank-filters" id="rankFilters"></div>
+  <button class="btn-excel-adv" onclick="exportRankingExcel()">⬇ Excel</button>
   <div class="rank-info" id="rankInfo">186 strumenti · Clicca su un ticker per aprirlo nel grafico</div>
   <div class="rank-wrap">
     <table class="rank-table" id="rankTable">
@@ -1134,6 +1317,7 @@ setTimeout(()=>{
           <th onclick="sortRank('mese')">MESE%</th>
           <th onclick="sortRank('cat')">CATEGORIA</th>
           <th onclick="sortRank('data')" style='cursor:pointer'>DATA ING. ↕</th>
+          <th>USCITA</th>
         </tr>
       </thead>
       <tbody id="rankBody"></tbody>

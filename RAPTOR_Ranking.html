@@ -96,7 +96,18 @@ td.mono{font-family:'JetBrains Mono',monospace;font-size:11px}
 .empty-state h3{font-size:16px;font-weight:600;margin-bottom:6px;color:#475569}
 .empty-state p{font-size:12px}
 
+
+.btn-excel-rank{background:#16a34a;border:none;color:#fff;padding:7px 14px;border-radius:6px;
+  cursor:pointer;font-size:12px;font-weight:700;transition:filter .15s;font-family:'Sora',sans-serif;}
+.btn-excel-rank:hover{filter:brightness(1.1)}
+
+
+.sb-stop{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
+.sb-uscita{background:#fff7ed;color:#9a3412;border-color:#fdba74}
+.sb-att{background:#fffbeb;color:#92400e;border-color:#fde68a}
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -113,6 +124,7 @@ td.mono{font-family:'JetBrains Mono',monospace;font-size:11px}
   <div class="nav-right">
     <span id="lastCalc" style="font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace"></span>
     <a href="RAPTOR_Advanced.html" class="btn-nav" id="btnToDash">📈 Dashboard Grafico</a>
+    <button class="btn-excel-rank" onclick="exportExcel()">⬇ Excel</button>
     <button class="btn-calc" id="btnCalc" onclick="calculateAll()">
       ⚡ CALCOLA RANKING LIVE
     </button>
@@ -134,7 +146,10 @@ td.mono{font-family:'JetBrains Mono',monospace;font-size:11px}
   <button class="sum-badge sb-long"    id="sf_LONG"  onclick="setTipoFilter('LONG')"><span>🟢 LONG</span><span class="cnt" id="cnt_LONG">0</span></button>
   <button class="sum-badge sb-early"   id="sf_EARLY" onclick="setTipoFilter('EARLY')"><span>🔵 EARLY</span><span class="cnt" id="cnt_EARLY">0</span></button>
   <button class="sum-badge sb-watch"   id="sf_WATCH" onclick="setTipoFilter('WATCH')"><span>🟡 WATCH</span><span class="cnt" id="cnt_WATCH">0</span></button>
-  <button class="sum-badge sb-rosso"   id="sf_ROSSO" onclick="setTipoFilter('ROSSO')"><span>⚪ ROSSO+</span><span class="cnt" id="cnt_ROSSO">0</span></button>
+  <button class="sum-badge sb-rosso"   id="sf_ROSSO"  onclick="setTipoFilter('ROSSO')"><span>⚪ ROSSO+</span><span class="cnt" id="cnt_ROSSO">0</span></button>
+  <button class="sum-badge sb-stop"    id="sf_STOP"   onclick="setTipoFilter('STOP')"><span>⛔ STOP</span><span class="cnt" id="cnt_STOP">0</span></button>
+  <button class="sum-badge sb-uscita"  id="sf_USCITA" onclick="setTipoFilter('USCITA')"><span>🔴 USCITA</span><span class="cnt" id="cnt_USCITA">0</span></button>
+  <button class="sum-badge sb-att"     id="sf_ATT"    onclick="setTipoFilter('ATT')"><span>🟡 ATTENZIONE</span><span class="cnt" id="cnt_ATT">0</span></button>
 </div>
 
 <!-- CATEGORY FILTERS -->
@@ -410,17 +425,54 @@ function processTicker(raw, info) {
 // ══════════════════════════════════════════════════════
 // FETCH + PROGRESS
 // ══════════════════════════════════════════════════════
-const BATCH = 20, DELAY = 350;
+const BATCH = 5, DELAY = 600;
 
 async function fetchTicker(yahoo) {
   const url='https://query1.finance.yahoo.com/v8/finance/chart/'+yahoo+'?interval=1d&range=1y&includePrePost=false';
-  const proxy='https://corsproxy.io/?'+encodeURIComponent(url);
-  const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const json=await res.json();
-  const r=json.chart?.result?.[0];
-  if(!r) throw new Error('No data');
-  return r;
+  const proxies=[
+    'https://corsproxy.io/?'+encodeURIComponent(url),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
+  ];
+  for(const proxy of proxies){
+    try{
+      const res=await fetch(proxy,{signal:AbortSignal.timeout(9000)});
+      if(!res.ok) continue;
+      const json=await res.json();
+      const r=json.chart?.result?.[0];
+      if(r) return r;
+    }catch(e){ /* try next */ }
+  }
+  throw new Error('N/D');
+}
+
+
+// ═══════════════════════════════════════
+//  EXPORT EXCEL
+// ═══════════════════════════════════════
+function exportExcel(){
+  if(!allResults||!allResults.length){alert('Nessun dato — calcola prima il ranking.');return;}
+  // usa la vista corrente (filtrata e ordinata)
+  const rows=displayResults&&displayResults.length?displayResults:allResults;
+  const data=[['#','TICKER','CATEGORIA','NOME','SEGNALE','SCORE','TRENDYCATOR','ER','BAFFETTI','MM ALIGN','AO>0','P>KAMA','VOL RATIO','SETT%','MESE%','P/K%','DATA ING.','USCITA','RSI']];
+  rows.forEach((r,i)=>{
+    if(r.error&&!r.prezzo) return;
+    data.push([
+      i+1, r.display||r.ticker||'', r.categoria||'', r.nome||'',
+      r.tipo||'', r.score||0, r.stato||'',
+      r.er!=null?r.er:'', r.baffCount!=null?r.baffCount:'',
+      r.mmAlign?'SI':'NO', r.aoPositive?'SI':'NO', r.pAboveKama?'SI':'NO',
+      r.volRatio!=null?r.volRatio:'',
+      r.perfSett!=null?r.perfSett:'', r.perfMese!=null?r.perfMese:'',
+      r.pkPct!=null?r.pkPct:'', r.entryDate||'', r.uscita||'', r.rsi!=null?r.rsi:''
+    ]);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:4},{wch:10},{wch:18},{wch:20},{wch:8},{wch:7},{wch:10},{wch:6},{wch:7},{wch:8},{wch:6},{wch:7},{wch:8},{wch:8},{wch:8},{wch:7},{wch:11},{wch:11},{wch:6}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'RAPTOR Ranking');
+  const now=new Date();
+  const d=now.getDate().toString().padStart(2,'0')+'_'+(now.getMonth()+1).toString().padStart(2,'0')+'_'+now.getFullYear();
+  XLSX.writeFile(wb,'RAPTOR_Ranking_'+d+'.xlsx');
 }
 
 async function calculateAll() {
@@ -476,13 +528,46 @@ async function calculateAll() {
     if(b+BATCH < total) await new Promise(r=>setTimeout(r,DELAY));
   }
 
+  // ── RETRY HELPER ──
+  async function retryPass(passNum, delayInit, delayBatch){
+    const failedIdx=allResults.map((r,i)=>r.error?i:-1).filter(i=>i>=0);
+    if(!failedIdx.length) return;
+    fill.style.width='0%';
+    ptxt.textContent='🔄 Retry '+passNum+'/3 · '+failedIdx.length+' ticker · pausa '+Math.round(delayInit/1000)+'s...';
+    ptkr.textContent='';
+    await new Promise(r=>setTimeout(r,delayInit));
+    let rDone=0;
+    for(let b=0;b<failedIdx.length;b+=BATCH){
+      const bIdx=failedIdx.slice(b,b+BATCH);
+      const bInfo=bIdx.map(i=>TICKERS[i]);
+      const res2=await Promise.all(bInfo.map(async info=>{
+        try{ return processTicker(await fetchTicker(info.y),info); }
+        catch(e){ return allResults[bIdx[bInfo.indexOf(info)]]; /* keep old error */ }
+      }));
+      res2.forEach((r,j)=>{ allResults[bIdx[j]]=r; });
+      rDone+=bIdx.length;
+      const stillFail=allResults.filter(r=>r.error).length;
+      fill.style.width=Math.round(rDone/failedIdx.length*100)+'%';
+      ptxt.textContent='🔄 Retry '+passNum+'/3 · '+rDone+'/'+failedIdx.length+' · ancora '+stillFail+' errori';
+      ptkr.textContent=bInfo[bInfo.length-1]?.y||'';
+      if(b+BATCH<failedIdx.length) await new Promise(r=>setTimeout(r,delayBatch));
+    }
+  }
+
+  // Pass 2
+  await retryPass(2, 1200, 800);
+  // Pass 3 solo se ancora errori
+  if(allResults.filter(r=>r.error).length > 0){
+    await retryPass(3, 2000, 1200);
+  }
+
   isCalculating=false;
   btn.disabled=false;
   btn.textContent='🔄 RICALCOLA';
   const now = new Date();
-  const ts = now.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const finalErrors=allResults.filter(r=>r.error).length;
+  const ts = now.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})+' · '+finalErrors+' errori';
   document.getElementById('lastCalc').textContent='Aggiornato: '+ts;
-  // Salva in localStorage per Advanced
   try {
     localStorage.setItem('raptor_ranking', JSON.stringify(allResults));
     localStorage.setItem('raptor_ranking_ts', ts);
@@ -499,8 +584,11 @@ async function calculateAll() {
 function applyFiltersAndSort() {
   let d=[...allResults];
 
-  // Tipo filter
-  if(activeTipoFilter!=='ALL') d=d.filter(r=>r.tipo===activeTipoFilter);
+  // Tipo / Uscita filter
+  if(activeTipoFilter==='STOP')   d=d.filter(r=>r.uscita&&r.uscita.includes('STOP'));
+  else if(activeTipoFilter==='USCITA') d=d.filter(r=>r.uscita&&r.uscita.includes('USCITA'));
+  else if(activeTipoFilter==='ATT')    d=d.filter(r=>r.uscita&&r.uscita.includes('ATTENZIONE'));
+  else if(activeTipoFilter!=='ALL') d=d.filter(r=>r.tipo===TIPO_MAP[activeTipoFilter]||r.tipo===activeTipoFilter);
 
   // Category filter
   if(activeCats.size>0) d=d.filter(r=>activeCats.has(r.categoria));
@@ -638,8 +726,12 @@ function renderSummary() {
   const uStop=allResults.filter(r=>r.uscita==='⛔ STOP').length;
   const uUscita=allResults.filter(r=>r.uscita==='🔴 USCITA').length;
   const uAtt=allResults.filter(r=>r.uscita==='🟡 ATTENZIONE').length;
-  const uelEl=document.getElementById('cnt_uscita');
-  if(uelEl) uelEl.textContent=(uStop+uUscita)+' stop/uscita · '+uAtt+' attenzione';
+  const elStop=document.getElementById('cnt_STOP');
+  const elUscita=document.getElementById('cnt_USCITA');
+  const elAtt=document.getElementById('cnt_ATT');
+  if(elStop)   elStop.textContent=uStop;
+  if(elUscita) elUscita.textContent=uUscita;
+  if(elAtt)    elAtt.textContent=uAtt;
 }
 
 function renderFilters() {
@@ -681,14 +773,17 @@ const TIPO_MAP = {
   'LONG':'🟢 LONG',
   'EARLY':'🔵 EARLY',
   'WATCH':'🟡 WATCH',
-  'ROSSO':'⚪ ROSSO+'
+  'ROSSO':'⚪ ROSSO+',
+  'STOP':'⛔ STOP',
+  'USCITA':'🔴 USCITA',
+  'ATT':'🟡 ATTENZIONE'
 };
+const USCITA_FILTERS = ['STOP','USCITA','ATT'];
 function setTipoFilter(key) {
-  activeTipoFilter = TIPO_MAP[key]||key;
-  // Update button styles
-  ['ALL','LONG','EARLY','WATCH','ROSSO'].forEach(k=>{
+  activeTipoFilter = key; // key diretta (es. 'STOP','USCITA','ATT','LONG',ecc.)
+  ['ALL','LONG','EARLY','WATCH','ROSSO','STOP','USCITA','ATT'].forEach(k=>{
     const b=document.getElementById('sf_'+k);
-    if(b) b.classList.toggle('act', (TIPO_MAP[k]||k)===activeTipoFilter);
+    if(b) b.classList.toggle('act', k===activeTipoFilter);
   });
   applyFiltersAndSort();
   renderSummary();
