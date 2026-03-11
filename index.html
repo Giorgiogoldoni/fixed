@@ -1,165 +1,353 @@
-     <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <title>RAPTOR – Link ETF</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #ffffff;
-            color: #222;
-        }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🦅 RAPTOR Suite</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1d4ed8;--blue-mid:#2563eb;--blue-light:#dbeafe;
+  --blue-border:#93c5fd;--blue-pale:#eff6ff;
+}
+body{font-family:'EB Garamond','Georgia',serif;background:#f0f6ff;color:#0f172a;min-height:100vh;display:flex;overflow:hidden}
 
-        /* MENU LATERALE */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 220px;
-            height: 100%;
-            background: #003366;
-            color: white;
-            padding-top: 30px;
-            box-shadow: 3px 0 10px rgba(0,0,0,0.2);
-        }
+/* WATERMARK */
+#watermark{position:fixed;inset:0;z-index:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
+#watermark svg{width:min(95vw,700px);height:min(95vh,700px);opacity:.14}
 
-        .sidebar h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 22px;
-        }
+/* SIDEBAR */
+#sidebar{
+  position:fixed;left:0;top:0;bottom:0;z-index:50;
+  width:210px;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(16px);
+  border-right:1px solid var(--blue-border);
+  transition:width .25s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+  box-shadow:3px 0 24px rgba(29,78,216,.08);
+}
+#sidebar.collapsed{width:62px}
+.sidebar-logo{
+  padding:18px 14px 14px;border-bottom:1px solid var(--blue-light);
+  display:flex;align-items:center;gap:10px;overflow:hidden;
+}
+.logo-icon{
+  width:36px;height:36px;border-radius:8px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),#1e3a8a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;box-shadow:0 2px 10px rgba(29,78,216,.4);
+  transition:transform .15s;
+}
+.logo-icon:hover{transform:scale(1.08)}
+.logo-text{overflow:hidden;white-space:nowrap;transition:opacity .2s}
+#sidebar.collapsed .logo-text{opacity:0;width:0}
+.logo-name{font-size:14px;font-weight:700;color:#0f172a;letter-spacing:1px}
+.logo-sub{font-size:9px;color:#94a3b8;letter-spacing:2px;font-family:'JetBrains Mono',monospace}
+nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:8px;cursor:pointer;
+  border-left:3px solid transparent;
+  color:#64748b;font-size:13px;
+  transition:all .15s;overflow:hidden;white-space:nowrap;
+  text-decoration:none;
+}
+.nav-item:hover{background:var(--blue-pale);color:var(--blue)}
+.nav-item.active{background:var(--blue-pale);border-left-color:var(--blue-mid);color:var(--blue);font-weight:700}
+.nav-item span.ni{font-size:15px;flex-shrink:0}
+.nav-label{transition:opacity .2s;font-family:'EB Garamond',serif}
+#sidebar.collapsed .nav-label{opacity:0;width:0}
+.sidebar-status{
+  padding:12px 10px;border-top:1px solid var(--blue-light);
+  display:flex;align-items:center;gap:8px;overflow:hidden;
+}
+.status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:background .3s,box-shadow .3s}
+.status-dot.online{background:#22c55e;box-shadow:0 0 8px #22c55e}
+.status-dot.offline{background:#ef4444;box-shadow:0 0 8px #ef4444}
+.status-text{overflow:hidden;white-space:nowrap;transition:opacity .2s}
+#sidebar.collapsed .status-text{opacity:0}
+.st-main{font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.st-sub{font-size:9px;color:#94a3b8}
 
-        .sidebar a {
-            display: block;
-            padding: 12px 20px;
-            color: white;
-            text-decoration: none;
-            font-size: 16px;
-            border-left: 4px solid transparent;
-        }
+/* MAIN */
+#main{
+  margin-left:210px;flex:1;padding:28px;
+  transition:margin-left .25s cubic-bezier(.4,0,.2,1);
+  position:relative;z-index:1;overflow-y:auto;height:100vh;
+}
+body.collapsed #main{margin-left:62px}
 
-        .sidebar a:hover {
-            background: #0055a5;
-            border-left: 4px solid #ffcc00;
-        }
+/* HEADER */
+.header{margin-bottom:28px}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.header-title-sm{font-size:9px;letter-spacing:5px;color:#94a3b8;font-family:'JetBrains Mono',monospace;margin-bottom:5px}
+.header-h1{font-size:34px;font-weight:700;color:#0f172a;letter-spacing:-1px;line-height:1;margin:0}
+.header-h1 span{background:linear-gradient(135deg,var(--blue),#0369a1);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-sub{font-size:11px;color:#64748b;margin-top:5px;letter-spacing:.3px}
+.clock-box{
+  text-align:right;background:rgba(255,255,255,.9);
+  border:1px solid var(--blue-border);border-radius:10px;padding:10px 16px;
+  backdrop-filter:blur(8px);
+}
+.clock-time{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--blue);letter-spacing:3px}
+.clock-date{font-size:10px;color:#94a3b8;margin-top:2px;letter-spacing:.5px}
+.header-line{height:2px;margin-top:18px;background:linear-gradient(90deg,var(--blue),#0369a1,var(--blue-border),transparent);border-radius:2px}
 
-        /* CONTENUTO PRINCIPALE */
-        .main {
-            margin-left: 240px;
-            padding: 30px;
-        }
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-bottom:24px}
+.tool-card{
+  background:rgba(255,255,255,.93);backdrop-filter:blur(10px);
+  border:1px solid var(--blue-border);border-radius:14px;
+  padding:22px 22px 18px;position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(29,78,216,.07),inset 0 1px 0 rgba(255,255,255,.9);
+  transition:transform .2s,box-shadow .2s;cursor:pointer;
+}
+.tool-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(29,78,216,.13),0 0 0 2px var(--blue-mid)}
+.card-accent{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),#0369a1)}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.card-icon{
+  width:44px;height:44px;border-radius:10px;
+  background:var(--blue-pale);border:1px solid var(--blue-border);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+.etf-badge{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.etf-num{
+  background:var(--blue);color:#fff;font-size:16px;font-weight:700;
+  padding:2px 10px;border-radius:6px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:1px;
+  box-shadow:0 2px 8px rgba(29,78,216,.35);line-height:1.4;
+}
+.etf-lbl{font-size:8px;color:#94a3b8;letter-spacing:2px;font-family:'JetBrains Mono',monospace}
+.card-name{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:5px;letter-spacing:.2px}
+.card-desc{font-size:11px;color:#64748b;line-height:1.6;margin-bottom:18px;min-height:34px}
+.card-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:7px;text-decoration:none;
+  background:var(--blue-pale);color:var(--blue);font-size:11px;
+  font-weight:700;border:1px solid var(--blue-border);
+  letter-spacing:.5px;transition:all .15s;
+  font-family:'JetBrains Mono',monospace;
+}
+.card-btn:hover{background:var(--blue);color:#fff}
 
-        h1 {
-            font-size: 34px;
-            margin-bottom: 5px;
-        }
+/* STATS BAR */
+.stats-bar{
+  display:flex;flex-wrap:wrap;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(8px);
+  border:1px solid var(--blue-border);border-radius:10px;
+  overflow:hidden;font-family:'JetBrains Mono',monospace;
+}
+.stat-item{flex:1;min-width:90px;padding:12px 16px;border-right:1px solid var(--blue-light)}
+.stat-item:last-child{border-right:none}
+.stat-item.hi{background:var(--blue-pale)}
+.stat-lbl{font-size:8px;color:#94a3b8;letter-spacing:2px;margin-bottom:4px}
+.stat-val{font-size:14px;font-weight:700;color:var(--blue)}
+.stat-item:not(.hi) .stat-val{color:#334155}
 
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        h2 {
-            margin-top: 50px;
-            font-size: 26px;
-            padding-left: 10px;
-            border-left: 6px solid #0055a5;
-        }
-
-        /* CARD */
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-
-        .card {
-            background: #fafafa;
-            border-radius: 14px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-        }
-
-        .card a {
-            font-size: 20px;
-            font-weight: 600;
-            color: #0055a5;
-            text-decoration: none;
-        }
-
-        /* FOOTER */
-        footer {
-            margin-top: 60px;
-            padding: 20px;
-            text-align: center;
-            color: #666;
-            border-top: 1px solid #ddd;
-        }
-    </style>
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
 </head>
-
 <body>
 
-<!-- MENU LATERALE -->
-<div class="sidebar">
-    <h2>RAPTOR</h2>
-    <a href="index.html">Home</a>
-    <a href="tematici.html">ETF Tematici</a>
-    <a href="settoriali.html">ETF Settoriali</a>
-    <a href="portafogli.html">Portafogli</a>
-    <a href="paesi.html">ETF Paesi</a>
-    <a href="strumenti.html">Strumenti</a>
+<!-- WATERMARK -->
+<div id="watermark">
+  <img src="data:image/jpeg;base64,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" style="width:min(85vw,580px);height:auto;opacity:0.12;filter:grayscale(100%) contrast(1.4);" alt=""/>
 </div>
 
-<!-- CONTENUTO PRINCIPALE -->
-<div class="main">
 
-    <h1>RAPTOR – Link ETF</h1>
-    <div class="subtitle">Dashboard professionale per analisi ETF</div>
-
-    <!-- ANALISI -->
-    <h2>Analisi</h2>
-    <div class="container">
-
-        <div class="card">
-            <a href="RAPTOR_Advice (1).html" target="_blank">RAPTOR Consigli</a>
-        </div>
-
-        <div class="card">
-            <a href="RAPTOR_Ranking.html" target="_blank">RAPTOR Ranking</a>
-        </div>
-
-        <div class="card">
-            <a href="etf-heatmap-ishares (2).html" target="_blank">ETF Heatmap iShares</a>
-        </div>
-
+<!-- Guilloche overlay -->
+<div style="position:fixed;inset:0;z-index:0;pointer-events:none;display:flex;align-items:center;justify-content:center;">
+<svg viewBox="0 0 500 500" style="width:min(95vw,700px);height:min(95vh,700px);opacity:0.05">
+<defs>
+  <linearGradient id="holo" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#1e3a8a"/>
+    <stop offset="50%" stop-color="#0e7490"/>
+    <stop offset="100%" stop-color="#1e3a8a"/>
+  </linearGradient>
+</defs>
+<ellipse cx="250" cy="250" rx="60"  ry="40"  fill="none" stroke="url(#holo)" stroke-width="0.8"/>
+<ellipse cx="250" cy="250" rx="80"  ry="55"  fill="none" stroke="url(#holo)" stroke-width="0.4"/>
+<ellipse cx="250" cy="250" rx="100" ry="70"  fill="none" stroke="url(#holo)" stroke-width="0.8"/>
+<ellipse cx="250" cy="250" rx="120" ry="85"  fill="none" stroke="url(#holo)" stroke-width="0.4"/>
+<ellipse cx="250" cy="250" rx="140" ry="100" fill="none" stroke="url(#holo)" stroke-width="0.8"/>
+<ellipse cx="250" cy="250" rx="160" ry="115" fill="none" stroke="url(#holo)" stroke-width="0.4"/>
+<ellipse cx="250" cy="250" rx="180" ry="130" fill="none" stroke="url(#holo)" stroke-width="0.8"/>
+<ellipse cx="250" cy="250" rx="200" ry="145" fill="none" stroke="url(#holo)" stroke-width="0.4"/>
+<ellipse cx="250" cy="250" rx="220" ry="160" fill="none" stroke="url(#holo)" stroke-width="0.8"/>
+<ellipse cx="250" cy="250" rx="50"  ry="120" fill="none" stroke="url(#holo)" stroke-width="0.4" transform="rotate(30 250 250)"/>
+<ellipse cx="250" cy="250" rx="70"  ry="140" fill="none" stroke="url(#holo)" stroke-width="0.4" transform="rotate(60 250 250)"/>
+<ellipse cx="250" cy="250" rx="90"  ry="160" fill="none" stroke="url(#holo)" stroke-width="0.4" transform="rotate(90 250 250)"/>
+<ellipse cx="250" cy="250" rx="110" ry="180" fill="none" stroke="url(#holo)" stroke-width="0.4" transform="rotate(120 250 250)"/>
+<ellipse cx="250" cy="250" rx="130" ry="200" fill="none" stroke="url(#holo)" stroke-width="0.4" transform="rotate(150 250 250)"/>
+<text x="18"  y="36"  font-size="10" fill="url(#holo)" font-family="Georgia,serif" letter-spacing="2">RAPTOR</text>
+<text x="388" y="36"  font-size="10" fill="url(#holo)" font-family="Georgia,serif" letter-spacing="2">v3.0</text>
+<text x="18"  y="490" font-size="10" fill="url(#holo)" font-family="Georgia,serif" letter-spacing="2">700 ETF</text>
+<text x="340" y="490" font-size="10" fill="url(#holo)" font-family="Georgia,serif" letter-spacing="2">YAHOO FIN</text>
+<text x="128" y="492" font-size="7"  fill="url(#holo)" font-family="Courier New,monospace" letter-spacing="3">RAPTOR-2026-ITA-700</text>
+</svg>
+</div>
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon" onclick="toggleSidebar()">🦅</div>
+    <div class="logo-text">
+      <div class="logo-name">RAPTOR</div>
+      <div class="logo-sub">v3.0 · SUITE</div>
     </div>
-
-    <!-- GRAFICI -->
-    <h2>Grafici</h2>
-    <div class="container">
-
-        <div class="card">
-            <a href="RAPTOR_Advanced.html" target="_blank">Dashbord Grafico</a>
-        </div>
-
+  </div>
+  <nav>
+    <a href="#"                      class="nav-item active"  onclick="setActive(this)"><span class="ni">🏠</span><span class="nav-label">Home</span></a>
+    <a href="RAPTOR_Alert.html"      class="nav-item"         onclick="setActive(this)"><span class="ni">🔔</span><span class="nav-label">Alert</span></a>
+    <a href="RAPTOR_Ranking.html"    class="nav-item"         onclick="setActive(this)"><span class="ni">📊</span><span class="nav-label">Ranking</span></a>
+    <a href="RAPTOR_Advanced.html"   class="nav-item"         onclick="setActive(this)"><span class="ni">📈</span><span class="nav-label">Advanced</span></a>
+    <a href="RAPTOR_Advice.html"     class="nav-item"         onclick="setActive(this)"><span class="ni">💼</span><span class="nav-label">Advice</span></a>
+    <a href="RAPTOR_Portfolio.html"  class="nav-item"         onclick="setActive(this)"><span class="ni">🗂️</span><span class="nav-label">Portfolio</span></a>
+    <a href="RAPTOR_Alert_Doc_v3.docx" class="nav-item"       onclick="setActive(this)"><span class="ni">📄</span><span class="nav-label">Docs</span></a>
+  </nav>
+  <div class="sidebar-status">
+    <div class="status-dot online" id="statusDot"></div>
+    <div class="status-text">
+      <div class="st-main" id="statusTxt">ONLINE · 28ms</div>
+      <div class="st-sub">Yahoo Finance</div>
     </div>
-
-    <!-- FOOTER -->
-    <footer>
-        © 2026 Giorgio Goldoni – RAPTOR ETF Dashboard  
-    </footer>
-
+  </div>
 </div>
 
+<!-- MAIN -->
+<div id="main">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-title-sm">SISTEMA DI ANALISI ETF · YAHOO FINANCE</div>
+        <h1 class="header-h1">🦅 RAPTOR <span>Suite</span></h1>
+        <div class="header-sub">Rapid Analysis &amp; Portfolio Trading Operations Report</div>
+      </div>
+      <div class="clock-box">
+        <div class="clock-time" id="clockTime">00:00:00</div>
+        <div class="clock-date" id="clockDate"></div>
+      </div>
+    </div>
+    <div class="header-line"></div>
+  </div>
+
+  <div class="cards-grid">
+
+    <div class="tool-card" onclick="location.href='RAPTOR_Alert.html'">
+      <div class="card-accent"></div>
+      <div class="card-header">
+        <div class="card-icon">🔔</div>
+        <div class="etf-badge">
+          <div class="etf-num">700</div>
+          <div class="etf-lbl">ETF ANALIZZATI</div>
+        </div>
+      </div>
+      <div class="card-name">RAPTOR Alert</div>
+      <div class="card-desc">Segnali in tempo reale · Filtri avanzati · Export Excel · Tripla chiamata</div>
+      <a href="RAPTOR_Alert.html" class="card-btn">APRI →</a>
+    </div>
+
+    <div class="tool-card" onclick="location.href='RAPTOR_Ranking.html'">
+      <div class="card-accent"></div>
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div class="etf-badge">
+          <div class="etf-num">700</div>
+          <div class="etf-lbl">ETF ANALIZZATI</div>
+        </div>
+      </div>
+      <div class="card-name">RAPTOR Ranking</div>
+      <div class="card-desc">Score 0-200 · Classificazione live · STOP / USCITA / ATTENZIONE</div>
+      <a href="RAPTOR_Ranking.html" class="card-btn">APRI →</a>
+    </div>
+
+    <div class="tool-card" onclick="location.href='RAPTOR_Advanced.html'">
+      <div class="card-accent"></div>
+      <div class="card-header">
+        <div class="card-icon">📈</div>
+        <div class="etf-badge">
+          <div class="etf-num">700</div>
+          <div class="etf-lbl">ETF ANALIZZATI</div>
+        </div>
+      </div>
+      <div class="card-name">RAPTOR Advanced</div>
+      <div class="card-desc">6 pannelli grafici · Heikin-Ashi · KAMA · AO · RSI · Position Sizing</div>
+      <a href="RAPTOR_Advanced.html" class="card-btn">APRI →</a>
+    </div>
+
+    <div class="tool-card" onclick="location.href='RAPTOR_Advice.html'">
+      <div class="card-accent"></div>
+      <div class="card-header">
+        <div class="card-icon">💼</div>
+        <div class="etf-badge">
+          <div class="etf-num">23</div>
+          <div class="etf-lbl">ETF ANALIZZATI</div>
+        </div>
+      </div>
+      <div class="card-name">RAPTOR Advice</div>
+      <div class="card-desc">Portafoglio Moneyfarm · Analisi allocazione · Segnali operativi</div>
+      <a href="RAPTOR_Advice.html" class="card-btn">APRI →</a>
+    </div>
+
+    <div class="tool-card" onclick="location.href='RAPTOR_Portfolio.html'">
+      <div class="card-accent"></div>
+      <div class="card-header">
+        <div class="card-icon">🗂️</div>
+      </div>
+      <div class="card-name">RAPTOR Portfolio</div>
+      <div class="card-desc">Gestione portafoglio · Pesi · Performance storica · Allocazione</div>
+      <a href="RAPTOR_Portfolio.html" class="card-btn">APRI →</a>
+    </div>
+
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item hi"><div class="stat-lbl">ETF MONITORATI</div><div class="stat-val">700</div></div>
+    <div class="stat-item"><div class="stat-lbl">PROXY CORS</div><div class="stat-val">2×</div></div>
+    <div class="stat-item"><div class="stat-lbl">RETRY PASS</div><div class="stat-val">3×</div></div>
+    <div class="stat-item"><div class="stat-lbl">BATCH SIZE</div><div class="stat-val">5</div></div>
+    <div class="stat-item"><div class="stat-lbl">DELAY</div><div class="stat-val">600ms</div></div>
+    <div class="stat-item"><div class="stat-lbl">FONTE DATI</div><div class="stat-val">Yahoo Finance</div></div>
+  </div>
+</div>
+
+<script>
+// Sidebar toggle
+let sideOpen = true;
+function toggleSidebar(){
+  sideOpen = !sideOpen;
+  document.getElementById('sidebar').classList.toggle('collapsed', !sideOpen);
+  document.body.classList.toggle('collapsed', !sideOpen);
+}
+
+// Nav active (solo per Home — gli altri aprono pagine diverse)
+function setActive(el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Clock
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clockTime').textContent =
+    now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('clockDate').textContent =
+    now.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// Status ping simulation
+function updateStatus(){
+  const online = Math.random() > 0.04;
+  const ms = 12 + Math.floor(Math.random()*40);
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusTxt');
+  dot.className = 'status-dot ' + (online?'online':'offline');
+  txt.textContent = (online?'ONLINE':'OFFLINE') + ' · ' + ms + 'ms';
+}
+setInterval(updateStatus, 4000);
+</script>
 </body>
 </html>
