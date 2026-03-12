@@ -199,6 +199,7 @@ body.collapsed #main{margin-left:62px}
   </div>
   <nav>
     <a href="#"                      class="nav-item active"  onclick="setActive(this)"><span class="ni">🏠</span><span class="nav-label">Home</span></a>
+    <a href="RAPTOR_One.html"        class="nav-item"         onclick="setActive(this)"><span class="ni">🦅</span><span class="nav-label">ONE <span style="font-size:8px;background:#1d4ed8;color:#fff;padding:1px 5px;border-radius:4px;margin-left:2px">NEW</span></span></a>
     <a href="RAPTOR_Alert.html"      class="nav-item"         onclick="setActive(this)"><span class="ni">🔔</span><span class="nav-label">Alert</span></a>
     <a href="RAPTOR_Ranking.html"    class="nav-item"         onclick="setActive(this)"><span class="ni">📊</span><span class="nav-label">Ranking</span></a>
     <a href="RAPTOR_Advanced.html"   class="nav-item"         onclick="setActive(this)"><span class="ni">📈</span><span class="nav-label">Advanced</span></a>
@@ -233,6 +234,20 @@ body.collapsed #main{margin-left:62px}
   </div>
 
   <div class="cards-grid">
+
+    <div class="tool-card" onclick="location.href='RAPTOR_One.html'" style="border-color:#f0883e;box-shadow:0 4px 20px rgba(240,136,62,.18),inset 0 1px 0 rgba(255,255,255,.9)">
+      <div class="card-accent" style="background:linear-gradient(90deg,#f0883e,#e3b341)"></div>
+      <div class="card-header">
+        <div class="card-icon" style="background:#fff7ed;border-color:#f0883e">🦅</div>
+        <div class="etf-badge">
+          <div class="etf-num" style="background:linear-gradient(135deg,#f0883e,#e3b341)">694</div>
+          <div class="etf-lbl">ETF ANALIZZATI</div>
+        </div>
+      </div>
+      <div class="card-name">RAPTOR One <span style="font-size:10px;background:#1d4ed8;color:#fff;padding:2px 7px;border-radius:5px;vertical-align:middle;margin-left:4px">NUOVO</span></div>
+      <div class="card-desc">Tool unificato · Alert + Ranking + Grafici · Yahoo & Stooq EU · Smart Refresh · 8 filtri combinati</div>
+      <a href="RAPTOR_One.html" class="card-btn" style="background:#fff7ed;color:#bc4c00;border-color:#f0883e">APRI →</a>
+    </div>
 
     <div class="tool-card" onclick="location.href='RAPTOR_Alert.html'">
       <div class="card-accent"></div>
@@ -304,11 +319,11 @@ body.collapsed #main{margin-left:62px}
 
   <div class="stats-bar">
     <div class="stat-item hi"><div class="stat-lbl">ETF MONITORATI</div><div class="stat-val">700</div></div>
-    <div class="stat-item"><div class="stat-lbl">PROXY CORS</div><div class="stat-val">2×</div></div>
+    <div class="stat-item"><div class="stat-lbl">PROXY CORS</div><div class="stat-val">3×</div></div>
     <div class="stat-item"><div class="stat-lbl">RETRY PASS</div><div class="stat-val">3×</div></div>
     <div class="stat-item"><div class="stat-lbl">BATCH SIZE</div><div class="stat-val">5</div></div>
     <div class="stat-item"><div class="stat-lbl">DELAY</div><div class="stat-val">600ms</div></div>
-    <div class="stat-item"><div class="stat-lbl">FONTE DATI</div><div class="stat-val">Yahoo Finance</div></div>
+    <div class="stat-item hi"><div class="stat-lbl">FONTE DATI</div><div class="stat-val">Yahoo · Stooq</div></div>
   </div>
 </div>
 
