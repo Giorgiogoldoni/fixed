@@ -801,16 +801,37 @@ function initTableMode(){
 async function fetchYahoo(symbol, interval='1d', range='1y'){
   const url='https://query1.finance.yahoo.com/v8/finance/chart/'+symbol+
     '?interval='+interval+'&range='+range+'&includePrePost=false';
+  const url2='https://query2.finance.yahoo.com/v8/finance/chart/'+symbol+
+    '?interval='+interval+'&range='+range+'&includePrePost=false';
+
+  // Proxies in ordine di affidabilità — testati da GitHub Pages
   const proxies=[
-    'https://corsproxy.io/?'+encodeURIComponent(url),
-    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
-    'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url),
+    // allorigins /get → restituisce {contents:"..."} → parse speciale
+    {url:'https://api.allorigins.win/get?url='+encodeURIComponent(url), wrap:true},
+    // codetabs — diretto JSON
+    {url:'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url), wrap:false},
+    // thingproxy
+    {url:'https://thingproxy.freeboard.io/fetch/'+url, wrap:false},
+    // corsproxy.io (spesso 403 con Yahoo ma proviamo)
+    {url:'https://corsproxy.io/?'+encodeURIComponent(url), wrap:false},
+    // stessa cosa su query2
+    {url:'https://api.allorigins.win/get?url='+encodeURIComponent(url2), wrap:true},
+    {url:'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url2), wrap:false},
   ];
-  for(const proxy of proxies){
+
+  for(const p of proxies){
     try{
-      const res=await fetch(proxy,{signal:AbortSignal.timeout(11000)});
+      const res=await fetch(p.url,{signal:AbortSignal.timeout(11000)});
       if(!res.ok) continue;
-      const j=await res.json();
+      let j;
+      if(p.wrap){
+        // allorigins /get wrapper: {contents:"json string"}
+        const wrapper=await res.json();
+        if(!wrapper?.contents) continue;
+        j=JSON.parse(wrapper.contents);
+      } else {
+        j=await res.json();
+      }
       const result=j?.chart?.result?.[0];
       if(result) return result;
     }catch(e){}
@@ -825,32 +846,40 @@ async function fetchStooq(symbol){
   const s=symbol.toLowerCase();
   const url='https://stooq.com/q/d/l/?s='+s+'&i=d';
   const proxies=[
-    'https://corsproxy.io/?'+encodeURIComponent(url),
-    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
-    'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url),
+    {url:'https://api.allorigins.win/get?url='+encodeURIComponent(url), wrap:true},
+    {url:'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url), wrap:false},
+    {url:'https://thingproxy.freeboard.io/fetch/'+url, wrap:false},
+    {url:'https://corsproxy.io/?'+encodeURIComponent(url), wrap:false},
   ];
-  for(const proxy of proxies){
+  for(const p of proxies){
     try{
-      const res=await fetch(proxy,{signal:AbortSignal.timeout(11000)});
+      const res=await fetch(p.url,{signal:AbortSignal.timeout(11000)});
       if(!res.ok) continue;
-      const text=await res.text();
+      let text;
+      if(p.wrap){
+        const wrapper=await res.json();
+        if(!wrapper?.contents) continue;
+        text=wrapper.contents;
+      } else {
+        text=await res.text();
+      }
       if(!text||text.includes('No data')||text.trim().length<50) continue;
       const lines=text.trim().split('\n');
       const header=lines[0].toLowerCase();
       if(!header.includes('close')) continue;
-      const rows=lines.slice(1).reverse(); // oldest first
+      const rows=lines.slice(1).reverse();
       const closes=[],highs=[],lows=[],vols=[],timestamps=[];
       for(const row of rows){
-        const p=row.split(',');
-        if(p.length<5) continue;
-        const dt=new Date(p[0]);
-        const o=parseFloat(p[1]),h=parseFloat(p[2]),l=parseFloat(p[3]),c=parseFloat(p[4]),v=parseFloat(p[5])||0;
+        const p2=row.split(',');
+        if(p2.length<5) continue;
+        const dt=new Date(p2[0]);
+        const h=parseFloat(p2[2]),l=parseFloat(p2[3]),c=parseFloat(p2[4]),v2=parseFloat(p2[5])||0;
         if(isNaN(c)||c<=0) continue;
-        closes.push(c);highs.push(h);lows.push(l);vols.push(v);
+        closes.push(c);highs.push(h);lows.push(l);vols.push(v2);
         timestamps.push(Math.floor(dt.getTime()/1000));
       }
       if(closes.length<60) continue;
-      return {closes,highs,lows,vols,timestamps};
+      return{closes,highs,lows,vols,timestamps};
     }catch(e){}
   }
   throw new Error('N/D');
