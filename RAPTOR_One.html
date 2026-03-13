@@ -31,6 +31,9 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 #header .spacer{flex:1}
 #srcSelect{background:var(--bg3);border:1px solid var(--border);color:var(--text);
   padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+#btnReload{background:#0969da;border:1px solid #388bfd;color:#fff;padding:6px 14px;
+  border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;}
+#btnReload:hover{background:#388bfd}
 #btnRun{background:#238636;border:1px solid #2ea043;color:#fff;padding:6px 16px;
   border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap}
 #btnRun:hover{background:#2ea043}
@@ -220,7 +223,8 @@ tr:hover td{background:#f0f6ff}
     <option value="yahoo">📊 Yahoo Finance (694 ETF)</option>
     <option value="stooq">🇪🇺 Stooq EU (641 ETF)</option>
   </select>
-  <button id="btnRun" onclick="startScan()">⚡ CALCOLA</button>
+  <button id="btnReload" onclick="loadFromJSON()" title="Ricarica dati da GitHub">🔄 Aggiorna</button>
+  <button id="btnRun" onclick="startScan()" title="Scan manuale via proxy">⚡ CALCOLA</button>
   <button id="btnExcel" onclick="exportExcel()">📥 Excel</button>
 </div>
 
@@ -763,36 +767,72 @@ let smartOn=false, smartTimer=null, smartCountdown=null;
 const BATCH=20, DELAY=350;
 
 // ═══════════════════════════════════════════════════════════════════
+//  CARICA JSON DA GITHUB (fonte primaria — nessun proxy, nessun CORS)
+// ═══════════════════════════════════════════════════════════════════
+const JSON_URL='https://raw.githubusercontent.com/Giorgiogoldoni/fixed/main/raptor_data.json';
+const MAX_AGE_HOURS=2; // dopo quanto tempo il JSON è considerato "vecchio"
+
+async function loadFromJSON(){
+  const tsEl=document.getElementById('tsText');
+  const tsBar=document.getElementById('tsBar');
+  tsBar.style.display='flex';
+  tsEl.textContent='⏳ Carico dati da GitHub...';
+  try{
+    const res=await fetch(JSON_URL+'?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const obj=await res.json();
+    if(!obj.data||!obj.data.length) throw new Error('JSON vuoto');
+
+    // Controlla freschezza
+    const dt=new Date(obj.timestamp);
+    const ageH=(Date.now()-dt.getTime())/3600000;
+    const ageStr=ageH<1?Math.round(ageH*60)+' min fa':Math.round(ageH)+'h fa';
+
+    allResults=obj.data;
+    const freshIcon = ageH<=MAX_AGE_HOURS ? '🟢' : '🟡';
+    const freshMsg  = ageH<=MAX_AGE_HOURS ? 'dati aggiornati' : 'dati vecchi — premi CALCOLA per aggiornare';
+    tsEl.innerHTML=`${freshIcon} Aggiornato: <strong>${obj.timestamp_it}</strong> (${ageStr}) · ${obj.ok}/${obj.total} ticker · ${freshMsg}`;
+
+    document.getElementById('hTotal').textContent=obj.total;
+    updateStats(); renderTable();
+    return true;
+  }catch(e){
+    tsEl.textContent='⚠️ JSON non disponibile — premi CALCOLA per scan manuale ('+e.message+')';
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 //  INIT TABLE MODE
 // ═══════════════════════════════════════════════════════════════════
 function initTableMode(){
-  // try to load cache
-  const src=document.getElementById('srcSelect').value;
-  const key='raptor_one_'+src;
-  try{
-    const saved=localStorage.getItem(key);
-    if(saved){
-      const obj=JSON.parse(saved);
-      allResults=obj.data||[];
-      document.getElementById('tsText').textContent=obj.ts||'Cache caricata';
-      document.getElementById('tsBar').style.display='flex';
-      updateStats(); renderTable();
+  document.getElementById('hTotal').textContent=TICKERS.length;
+  document.getElementById('tsBar').style.display='flex';
+
+  // 1. Prova a caricare il JSON da GitHub
+  loadFromJSON().then(ok=>{
+    if(!ok){
+      // 2. Fallback: prova la cache localStorage
+      const src=document.getElementById('srcSelect').value;
+      try{
+        const saved=localStorage.getItem('raptor_one_'+src);
+        if(saved){
+          const obj=JSON.parse(saved);
+          allResults=obj.data||[];
+          document.getElementById('tsText').textContent='📦 Cache locale: '+(obj.ts||'—')+' — premi CALCOLA per aggiornare';
+          updateStats(); renderTable();
+        }
+      }catch(e){}
     }
-  }catch(e){}
+  });
+
   document.getElementById('srcSelect').addEventListener('change',()=>{
     TICKERS=document.getElementById('srcSelect').value==='stooq'?TICKERS_STOOQ:TICKERS_YAHOO;
     allResults=[];
     document.getElementById('hTotal').textContent=TICKERS.length;
-    const src2=document.getElementById('srcSelect').value;
-    try{
-      const s=localStorage.getItem('raptor_one_'+src2);
-      if(s){const o=JSON.parse(s);allResults=o.data||[];
-        document.getElementById('tsText').textContent=o.ts||'';
-        updateStats();renderTable();return;}
-    }catch(e){}
-    allResults=[];renderTable();
+    // Al cambio fonte ricarica il JSON (contiene tutti i ticker)
+    loadFromJSON();
   });
-  document.getElementById('hTotal').textContent=TICKERS.length;
 }
 
 // ═══════════════════════════════════════════════════════════════════
