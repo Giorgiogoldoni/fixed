@@ -118,6 +118,19 @@ def process_ticker(info):
         if hist.empty or len(hist) < 60:
             return None
 
+        # Prova a prendere il nome ETF
+        nome = info.get('n','')
+        if not nome:
+            try:
+                meta = tk.fast_info
+                nome = getattr(meta, 'long_name', '') or getattr(meta, 'short_name', '') or ''
+                if not nome:
+                    inf = tk.info
+                    nome = inf.get('longName','') or inf.get('shortName','') or ''
+                nome = nome[:60]  # tronca a 60 chars
+            except:
+                nome = ''
+
         close  = [float(x) for x in hist['Close'].values]
         high   = [float(x) for x in hist['High'].values]
         low    = [float(x) for x in hist['Low'].values]
@@ -178,7 +191,7 @@ def process_ticker(info):
             'ticker':    info['t'],
             'yahoo':     symbol,
             'categoria': info['c'],
-            'nome':      info.get('n',''),
+            'nome':      nome,
             'segnale':   tipo,
             'uscita':    uscita,
             'score':     round(score, 1),
