@@ -8,93 +8,95 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'JetBrains Mono','Courier New',monospace;background:#f8fafc;color:#0f172a;min-height:100vh;padding:12px;font-size:12px}
+body{font-family:'JetBrains Mono','Courier New',monospace;background:#f8fafc;color:#0f172a;min-height:100vh;padding:6px 10px;font-size:11px;overflow-x:hidden}
 a{color:#58a6ff}
 /* Header */
-.hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.hdr h1{font-size:18px;color:#2563eb;letter-spacing:2px}
-.hdr .sub{font-size:9px;color:#94a3b8;letter-spacing:2px;margin-top:2px}
-#upd{font-size:9px;color:#94a3b8;margin-top:4px}
+.hdr{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.hdr h1{font-size:14px;color:#2563eb;letter-spacing:2px}
+.hdr .sub{font-size:8px;color:#94a3b8;letter-spacing:1px;margin-top:1px}
+#upd{font-size:8px;color:#94a3b8;margin-top:2px}
+/* Data aggiornamento EVIDENTE */
+#dataAggiornBanner{background:#1e3a5f;border:2px solid #3b82f6;border-radius:6px;padding:4px 12px;display:inline-flex;align-items:center;gap:8px;margin-bottom:4px}
+#dataAggiornBanner .lbl{font-size:9px;color:#93c5fd;letter-spacing:1px}
+#dataAggiornBanner .val{font-size:13px;font-weight:700;color:#60a5fa;font-family:'JetBrains Mono',monospace}
 /* Controls */
-.ctrl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
-input[type=text]{background:#fff;border:1px solid #e2e8f0;color:#2563eb;padding:7px 10px;border-radius:5px;font-family:inherit;font-size:12px;outline:none;width:130px}
-input[type=text]::placeholder{color:#30363d}
-button{background:#fff;border:1px solid #e2e8f0;color:#64748b;padding:6px 9px;border-radius:5px;cursor:pointer;font-size:10px;font-family:inherit;transition:all .15s}
+.ctrl{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;align-items:center}
+input[type=text]{background:#fff;border:1px solid #e2e8f0;color:#2563eb;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:11px;outline:none;width:120px}
+input[type=text]::placeholder{color:#94a3b8}
+button{background:#fff;border:1px solid #e2e8f0;color:#64748b;padding:3px 7px;border-radius:4px;cursor:pointer;font-size:9px;font-family:inherit;transition:all .15s}
 button:hover,button.act{background:#eff6ff;border-color:#3b82f6;color:#2563eb}
-#btnGo{background:#1f6feb;border:none;color:#fff;padding:7px 14px;font-size:12px;font-weight:700;border-radius:5px}
+#btnGo{background:#1f6feb;border:none;color:#fff;padding:4px 12px;font-size:11px;font-weight:700;border-radius:4px}
 #btnGo:hover{background:#388bfd}
 /* Ticker search */
-.search-wrap{position:relative;margin-bottom:8px}
-#tkSearch{width:100%;background:#fff;border:1.5px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:12px;outline:none}
-#tkSearch::placeholder{color:#484f58}
-#tkDropdown{display:none;position:absolute;z-index:100;width:100%;max-height:220px;overflow-y:auto;background:#fff;border:1.5px solid #e2e8f0;border-radius:0 0 6px 6px;border-top:none;box-shadow:0 8px 20px rgba(0,0,0,.08)}
-.tk-opt{padding:7px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid #21262d}
+.search-wrap{position:relative;margin-bottom:4px}
+#tkSearch{width:100%;background:#fff;border:1.5px solid #e2e8f0;color:#0f172a;padding:5px 10px;border-radius:5px;font-family:inherit;font-size:11px;outline:none}
+#tkSearch::placeholder{color:#94a3b8}
+#tkDropdown{display:none;position:absolute;z-index:100;width:100%;max-height:200px;overflow-y:auto;background:#fff;border:1.5px solid #e2e8f0;border-radius:0 0 6px 6px;border-top:none;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+.tk-opt{padding:5px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid #f1f5f9}
 .tk-opt:hover{background:#f0f9ff}
-.tk-opt .sym{color:#2563eb;font-weight:700;min-width:80px}
-.tk-opt .nm{color:#64748b;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}
-.tk-opt .cls{color:#94a3b8;font-size:9px;min-width:80px;text-align:right}
+.tk-opt .sym{color:#2563eb;font-weight:700;min-width:70px;font-size:10px}
+.tk-opt .nm{color:#64748b;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+.tk-opt .cls{color:#94a3b8;font-size:8px;min-width:70px;text-align:right}
 /* ETF name bar */
-#etfName{background:#fff;border:1.5px solid #e2e8f0;border-radius:6px;padding:8px 14px;margin-bottom:10px;display:none;align-items:center;gap:10px;flex-wrap:wrap}
-#etfNameSym{color:#2563eb;font-weight:700;font-size:14px}
-#etfNameFull{color:#c9d1d9;font-size:12px}
-#etfNameCls{color:#64748b;font-size:10px;background:#f1f5f9;padding:2px 8px;border-radius:3px}
-/* Cards row */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px}
-.card .lbl{font-size:9px;color:#94a3b8;letter-spacing:1px;margin-bottom:4px}
-.card .val{font-size:18px;font-weight:700}
-.card .sub{font-size:9px;color:#94a3b8;margin-top:3px}
+#etfName{background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:4px 10px;margin-bottom:4px;display:none;align-items:center;gap:8px;flex-wrap:wrap}
+#etfNameSym{color:#2563eb;font-weight:700;font-size:12px}
+#etfNameFull{color:#475569;font-size:10px}
+#etfNameCls{color:#64748b;font-size:9px;background:#dbeafe;padding:1px 6px;border-radius:3px}
+/* Cards row — COMPATTE */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:4px;margin-bottom:4px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:5px;padding:5px 8px}
+.card .lbl{font-size:8px;color:#94a3b8;letter-spacing:0.5px;margin-bottom:1px}
+.card .val{font-size:13px;font-weight:700}
+.card .sub{font-size:8px;color:#94a3b8;margin-top:1px}
 /* Trendycator card */
-.tc-card{background:#fff;border:2px solid #e2e8f0;border-radius:6px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.tc-name{font-size:15px;font-weight:700}
-.tc-hint{font-size:10px;color:#64748b}
+.tc-card{background:#fff;border:2px solid #e2e8f0;border-radius:5px;padding:5px 10px;margin-bottom:4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tc-name{font-size:12px;font-weight:700}
+.tc-hint{font-size:9px;color:#64748b}
 /* Signals */
-.sigs{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:10px}
-.sig{background:#fff;border-radius:5px;padding:9px 10px;border:1px solid #e2e8f0}
-.sig .lbl{font-size:9px;color:#94a3b8;letter-spacing:1px}
-.sig .val{font-size:17px;font-weight:700;margin-top:3px}
-.sig .dsc{font-size:9px;color:#64748b;margin-top:2px}
+.sigs{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:4px;margin-bottom:4px}
+.sig{background:#fff;border-radius:4px;padding:5px 8px;border:1px solid #e2e8f0}
+.sig .lbl{font-size:8px;color:#94a3b8;letter-spacing:0.5px}
+.sig .val{font-size:13px;font-weight:700;margin-top:1px}
+.sig .dsc{font-size:8px;color:#64748b;margin-top:1px}
 /* Signal badges */
-.badge{display:inline-block;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:700;margin:0 4px 4px 0}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin:0 3px 3px 0}
 .badge-long{background:#0d3b1f;color:#3fb950;border:1px solid #238636}
 .badge-mr{background:#3b1f0d;color:#f0883e;border:1px solid #9e4a1a}
-.badge-none{background:#161b22;color:#484f58;border:1px solid #30363d}
-.warn{background:#fffbeb;border:1px solid #f59e0b;color:#f0883e;padding:7px 10px;border-radius:5px;font-size:10px;margin-bottom:10px}
+.badge-none{background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0}
+.warn{background:#fffbeb;border:1px solid #f59e0b;color:#f0883e;padding:4px 8px;border-radius:4px;font-size:9px;margin-bottom:4px}
 /* Charts */
-.chart-section{background:#fff;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:8px;padding:10px 12px}
-.chart-title{font-size:10px;color:#2563eb;letter-spacing:1px;margin-bottom:6px}
+.chart-section{background:#fff;border:1px solid #e2e8f0;border-radius:5px;margin-bottom:4px;padding:5px 8px}
+.chart-title{font-size:9px;color:#2563eb;letter-spacing:1px;margin-bottom:3px}
 .chart-wrap{position:relative}
 .chart-wrap canvas{display:block;width:100%!important}
 /* Sizing */
-.sizing{background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;margin-bottom:10px}
-.sz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin-top:8px}
-.sz-item{background:#f8fafc;border-radius:4px;padding:7px 9px}
-.sz-item .lbl{font-size:9px;color:#94a3b8}
-.sz-item .val{font-size:15px;font-weight:700;color:#58a6ff;margin-top:2px}
+.sizing{background:#fff;border:1px solid #e2e8f0;border-radius:5px;padding:5px 8px;margin-bottom:4px}
+.sz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:4px;margin-top:4px}
+.sz-item{background:#f8fafc;border-radius:3px;padding:4px 7px}
+.sz-item .lbl{font-size:8px;color:#94a3b8}
+.sz-item .val{font-size:12px;font-weight:700;color:#58a6ff;margin-top:1px}
 /* Error / Loading */
-.err{background:#fef2f2;border:1px solid #ef4444;color:#ff5252;padding:10px;border-radius:5px;margin-bottom:10px;font-size:11px}
-.loading{color:#94a3b8;text-align:center;padding:40px}
-.disc{font-size:9px;color:#cbd5e1;text-align:center;margin-top:8px}
+.err{background:#fef2f2;border:1px solid #ef4444;color:#ff5252;padding:6px 10px;border-radius:4px;margin-bottom:6px;font-size:10px}
+.loading{color:#94a3b8;text-align:center;padding:20px;font-size:11px}
+.disc{font-size:8px;color:#cbd5e1;text-align:center;margin-top:4px}
 /* Category filter */
-.cats{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
-.cat-btn{background:#fff;border:1px solid #e2e8f0;color:#64748b;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:9px;font-family:inherit}
-.cat-btn:hover,.cat-btn.act{background:#eff6ff;border-color:#3b82f6;color:#2563eb}
+.cats{display:none}
 </style>
 </head>
 <body>
 <div class="hdr">
   <div>
     <h1>🦅 RAPTOR ADVANCED</h1>
-    <div class="sub">KAMA · AO · RSI · LONG · MEAN REVERSION · 714 TICKER</div>
-    <div style="font-size:9px;color:#94a3b8;margin-top:3px;font-family:'JetBrains Mono',monospace">v2.2 &nbsp;·&nbsp; 08/03/2026</div>
+    <div class="sub">KAMA · AO · RSI · LONG · MEAN REVERSION</div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <a href="RAPTOR_Ranking.html" style="display:inline-flex;align-items:center;gap:5px;background:#2563eb;color:#fff;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;font-family:inherit">🏆 RANKING LIVE</a>
-    <div>
-      <div id="upd" style="font-size:9px;color:#94a3b8">In attesa di dati...</div>
-      <div id="rankTs" style="font-size:9px;color:#94a3b8;margin-top:1px"></div>
-      <div style="font-size:9px;color:#94a3b8;margin-top:1px">Dati: <span id="dataAggiorn" style="color:#3b82f6;font-weight:600">—</span></div>
-    </div>
+  <div id="dataAggiornBanner">
+    <div class="lbl">📅 DATI AGGIORNATI AL</div>
+    <div class="val" id="dataAggiorn">—</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <a href="RAPTOR_One.html" style="background:#e2e8f0;color:#475569;padding:3px 10px;border-radius:4px;font-size:9px;font-weight:700;text-decoration:none;">← RAPTOR ONE</a>
+    <div id="upd" style="font-size:8px;color:#94a3b8"></div>
+    <div id="rankTs" style="display:none"></div>
   </div>
 </div>
 
@@ -221,31 +223,31 @@ button:hover,button.act{background:#eff6ff;border-color:#3b82f6;color:#2563eb}
 <!-- ── PANNELLO 1: Prezzo + KAMA ── -->
 <div class="chart-section">
   <div class="chart-title">P1 — PREZZO + KAMA · Bande LONG/MR · Pivot · Segnali</div>
-  <div class="chart-wrap"><canvas id="c1" height="240"></canvas></div>
+  <div class="chart-wrap"><canvas id="c1" height="180"></canvas></div>
 </div>
 
 <!-- ── PANNELLO 2: Baffettini ── -->
 <div class="chart-section" style="padding-bottom:4px">
   <div class="chart-title">P2 — POSIZIONI ATTIVE (baffettini)</div>
-  <div class="chart-wrap"><canvas id="c2" height="36"></canvas></div>
+  <div class="chart-wrap"><canvas id="c2" height="28"></canvas></div>
 </div>
 
 <!-- ── PANNELLO 3: Awesome Oscillator ── -->
 <div class="chart-section">
   <div class="chart-title">P3 — AWESOME OSCILLATOR (EMA7−EMA34)</div>
-  <div class="chart-wrap"><canvas id="c3" height="90"></canvas></div>
+  <div class="chart-wrap"><canvas id="c3" height="65"></canvas></div>
 </div>
 
 <!-- ── PANNELLO 4: RSI ── -->
 <div class="chart-section">
   <div class="chart-title">P4 — RSI 14</div>
-  <div class="chart-wrap"><canvas id="c4" height="90"></canvas></div>
+  <div class="chart-wrap"><canvas id="c4" height="65"></canvas></div>
 </div>
 
 <!-- ── PANNELLO 5: P < KAMA ── -->
 <div class="chart-section">
   <div class="chart-title">P5 — RIBASSO: MAX(0, KAMA − PREZZO)</div>
-  <div class="chart-wrap"><canvas id="c5" height="60"></canvas></div>
+  <div class="chart-wrap"><canvas id="c5" height="45"></canvas></div>
 </div>
 
 <!-- Position Sizing -->
@@ -950,7 +952,9 @@ function processData(r,sym,info){
   document.getElementById('upd').textContent='Aggiornato: '+new Date().toLocaleTimeString('it-IT')+' · Auto-refresh 60s';
   if(valid.length>0){
     const lastDate = new Date(valid[valid.length-1].t*1000);
-    document.getElementById('dataAggiorn').textContent = lastDate.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
+    // Mostra timestamp dal JSON se disponibile, altrimenti data ultima barra
+    const jsonTs=chartJsonAdvCache&&chartJsonAdvCache.timestamp_it?chartJsonAdvCache.timestamp_it:null;
+    document.getElementById('dataAggiorn').textContent = jsonTs || lastDate.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
   }
   clearInterval(autoTimer);
   autoTimer=setInterval(loadData,60000);
@@ -1114,59 +1118,6 @@ setTimeout(()=>{
 // buildCats() - ora i bottoni sono statici nell'HTML
 </script>
 
-<style>
-#rankPanel{padding-bottom:12px}
-.rank-filters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
-.rf{background:#fff;border:1px solid #e2e8f0;color:#64748b;padding:3px 8px;border-radius:3px;cursor:pointer;font-size:10px;font-family:inherit}
-.rf:hover,.rf.act{background:#eff6ff;border-color:#3b82f6;color:#2563eb}
-.rank-table{width:100%;border-collapse:collapse;font-size:11px}
-.rank-table th{background:#f8fafc;color:#64748b;padding:7px 8px;text-align:left;border-bottom:1px solid #e2e8f0;position:sticky;top:0;cursor:pointer;white-space:nowrap;font-size:10px}
-.rank-table th:hover{color:#58a6ff}
-.rank-table td{padding:6px 8px;border-bottom:1px solid #0d1117;white-space:nowrap}
-.rank-table tr:hover td{background:#f0f9ff;cursor:pointer}
-.tipo-long{color:#3fb950;font-weight:700}
-.tipo-early{color:#58a6ff;font-weight:700}
-.tipo-watch{color:#e3b341;font-weight:700}
-.tipo-rosso{color:#8b949e;font-weight:700}
-.pos{color:#3fb950}.neg{color:#f85149}.neu{color:#8b949e}
-.rank-num{color:#484f58;text-align:right;padding-right:10px}
-.score-bar{display:inline-block;height:4px;background:#3b82f6;border-radius:2px;margin-left:4px;vertical-align:middle}
-.rank-wrap{max-height:520px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px}
-.rank-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:10px;color:#475569}
-.rank-legend span{display:flex;align-items:center;gap:4px}
-.rank-info{font-size:10px;color:#94a3b8;margin-bottom:6px}
-</style>
-<div id="rankContent">
-  <div class="rank-legend">
-    <span><span class="tipo-long">🟢 LONG</span> — sistema completo confermato</span>
-    <span><span class="tipo-early">🔵 EARLY</span> — entrata anticipata</span>
-    <span><span class="tipo-watch">🟡 WATCH</span> — da monitorare</span>
-    <span><span class="tipo-rosso">⚪ ROSSO+</span> — inversione potenziale</span>
-  </div>
-  <div class="rank-filters" id="rankFilters"></div>
-  <div class="rank-info" id="rankInfo">186 strumenti · Clicca su un ticker per aprirlo nel grafico</div>
-  <div class="rank-wrap">
-    <table class="rank-table" id="rankTable">
-      <thead>
-        <tr>
-          <th onclick="sortRank('rank')">#</th>
-          <th onclick="sortRank('ticker')">TICKER</th>
-          <th onclick="sortRank('tipo')">TIPO</th>
-          <th onclick="sortRank('score')">SCORE ↓</th>
-          <th onclick="sortRank('stato')">STATO</th>
-          <th onclick="sortRank('er')">ER</th>
-          <th onclick="sortRank('pk')">P/K%</th>
-          <th onclick="sortRank('ao')">AO</th>
-          <th onclick="sortRank('baff')">BAFF.</th>
-          <th onclick="sortRank('sett')">SETT%</th>
-          <th onclick="sortRank('mese')">MESE%</th>
-          <th onclick="sortRank('cat')">CATEGORIA</th>
-          <th onclick="sortRank('data')" style='cursor:pointer'>DATA ING. ↕</th>
-        </tr>
-      </thead>
-      <tbody id="rankBody"></tbody>
-    </table>
-  </div>
-</div>
-</div><!-- #rankPanel --></body>
+
+</body>
 </html>
