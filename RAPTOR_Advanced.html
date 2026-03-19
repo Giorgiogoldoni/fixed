@@ -966,17 +966,7 @@ function processData(r,sym,info){
 // ═══════════════════════════════════════════════════════
 let rankFilter='ALL', rankSort='score', rankDir=-1;
 
-function showTab(tab){
-  document.getElementById('tabChart').classList.toggle('act', tab==='chart');
-  document.getElementById('tabRank').classList.toggle('act', tab==='rank');
-  const chartEls=['ctrl','etfName','errBox','loadMsg','dash'];
-  chartEls.forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display = tab==='chart' ? (id==='ctrl'||id==='etfName'?'flex':id==='dash'&&document.getElementById('dash').dataset.loaded?'block':'') : 'none';
-  });
-  document.getElementById('rankPanel').style.display = tab==='rank' ? 'block' : 'none';
-  if(tab==='rank') renderRanking();
-}
+function showTab(tab){} // ranking rimosso
 
 function buildRankFilters(){
   const cats=['ALL',...new Set(RANKING.map(r=>r.tipo)),'---',...new Set(RANKING.map(r=>r.cat).filter(Boolean))];
@@ -1056,17 +1046,16 @@ function openFromRanking(ticker,cat){
   document.getElementById('tkSearch').value=info.y;
   currentTicker=info.y;
   currentTickerInfo=info;
-  showTab('chart');
+  document.getElementById('dash').style.display='block';
   setTimeout(loadData,100);
 }
 
 // Auto-init ranking panel da localStorage
 setTimeout(()=>{
   try {
-    const saved = localStorage.getItem('raptor_ranking');
-    if(saved) {
-      const data = JSON.parse(saved);
-      // Sostituisce RANKING con dati live
+    // ranking rimosso
+    if(false) {
+      const data = [];
       RANKING.length=0;
       data.forEach(r=>{
         RANKING.push({
@@ -1092,7 +1081,7 @@ setTimeout(()=>{
       });
     }
   } catch(e){}
-  buildRankFilters();
+  // buildRankFilters rimosso (tabella rank eliminata)
 
   // Leggi ?ticker= dall'URL e carica automaticamente il grafico
   const urlParams = new URLSearchParams(window.location.search);
@@ -1102,6 +1091,7 @@ setTimeout(()=>{
     if(searchEl) {
       // Cerca il simbolo Yahoo corrispondente al ticker display
       const info = TICKERS.find(t =>
+        t.y.toUpperCase() === urlTicker.toUpperCase() ||
         t.t.toUpperCase() === urlTicker.toUpperCase()
       );
       // Metti nella barra il simbolo Yahoo se trovato, altrimenti il ticker diretto
