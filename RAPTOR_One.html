@@ -342,12 +342,14 @@ tr:hover td{background:#f0f6ff}
       <div id="chartSub"></div>
     </div>
     <div style="flex:1"></div>
-    <button class="tf-btn active" data-tf="1d_1y" onclick="setTF(this)">Daily 1a</button>
-    <button class="tf-btn" data-tf="1d_3mo" onclick="setTF(this)">Daily 3m</button>
-    <button class="tf-btn" data-tf="1d_5y" onclick="setTF(this)">Daily 5a</button>
-    <button class="tf-btn" data-tf="1h_1mo" onclick="setTF(this)" id="tf1h">1 ora</button>
-    <button class="tf-btn" data-tf="15m_5d" onclick="setTF(this)" id="tf15m">15 min</button>
-    <button class="tf-btn" data-tf="5m_1d" onclick="setTF(this)" id="tf5m">5 min</button>
+    <button class="tf-btn" data-tf="5h" onclick="setTF(this)">5h</button>
+    <button class="tf-btn" data-tf="1d" onclick="setTF(this)">1g</button>
+    <button class="tf-btn" data-tf="1w" onclick="setTF(this)">1s</button>
+    <button class="tf-btn active" data-tf="1m" onclick="setTF(this)">1m</button>
+    <button class="tf-btn" data-tf="3m" onclick="setTF(this)">3m</button>
+    <button class="tf-btn" data-tf="6m" onclick="setTF(this)">6m</button>
+    <button class="tf-btn" data-tf="1y" onclick="setTF(this)">1a</button>
+    <button class="tf-btn" id="btnSpecs" onclick="openSpecs()" style="margin-left:8px;background:#fff8c5;border-color:#7d4e00;color:#7d4e00;">📄 Specifiche</button>
   </div>
 
   <div id="infoBar">
@@ -363,18 +365,115 @@ tr:hover td{background:#f0f6ff}
   </div>
 
   <div id="panels">
-    <div class="panel"><div class="panel-title">P1 — PREZZO + KAMA + MM · Bande LONG/MR · Segnali</div>
+    <div class="panel"><div class="panel-title">P1 — PREZZO + KAMA + MM20 + MM50 + MM200 · Segnali</div>
       <div class="panel-body"><canvas id="p1" height="260"></canvas></div></div>
-    <div class="panel"><div class="panel-title">P2 — HEIKIN-ASHI</div>
+    <div class="panel" id="panelHA"><div class="panel-title">P2 — HEIKIN-ASHI · Trend filtrato</div>
       <div class="panel-body"><canvas id="p2" height="180"></canvas></div></div>
-    <div class="panel"><div class="panel-title">BAFFETTI — Momentum AO consecutivi</div>
-      <div class="panel-body"><canvas id="pBaf" height="60"></canvas></div></div>
+    <div class="panel" id="panelBaf">
+      <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>BAFFETTI AO — Momentum consecutivo · Segnale COMPRA / FUORI</span>
+        <span id="bafSignal" style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;"></span>
+      </div>
+      <div class="panel-body"><canvas id="pBaf" height="90"></canvas></div>
+      <div id="bafLegend" style="padding:4px 12px 8px;font-size:11px;color:#57606a;display:flex;gap:16px;flex-wrap:wrap;"></div>
+    </div>
     <div class="panel"><div class="panel-title">P3 — AO (Awesome Oscillator)</div>
       <div class="panel-body"><canvas id="p3" height="120"></canvas></div></div>
     <div class="panel"><div class="panel-title">P4 — RSI(14)</div>
       <div class="panel-body"><canvas id="p4" height="100"></canvas></div></div>
-    <div class="panel"><div class="panel-title">P5 — VOLUME</div>
+    <div class="panel"><div class="panel-title">P5 — VOLUME · vs Media 20gg</div>
       <div class="panel-body"><canvas id="p5" height="80"></canvas></div></div>
+  </div>
+</div>
+
+<!-- SPECS MODAL -->
+<div id="specsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:3000;overflow-y:auto;padding:20px;">
+  <div style="background:#fff;max-width:860px;margin:0 auto;border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.35);">
+    <div style="background:#0969da;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;">
+      <div>
+        <div style="font-size:17px;font-weight:700;">📄 RAPTOR One — Specifiche Tecniche</div>
+        <div style="font-size:12px;opacity:0.8;margin-top:2px;">Indicatori · Segnali · Score · Logica operativa</div>
+      </div>
+      <button onclick="closeSpecs()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:6px;padding:4px 12px;line-height:1;">✕</button>
+    </div>
+    <div style="padding:20px 24px;font-size:13px;color:#24292f;line-height:1.7;">
+
+      <h3 style="color:#0969da;border-bottom:2px solid #ddf4ff;padding-bottom:6px;margin-top:0;">🔢 Indicatori calcolati</h3>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12px;">
+        <thead><tr style="background:#f6f8fa;"><th style="padding:7px 10px;text-align:left;border:1px solid #d0d7de;">Indicatore</th><th style="padding:7px 10px;text-align:left;border:1px solid #d0d7de;">Parametri</th><th style="padding:7px 10px;text-align:left;border:1px solid #d0d7de;">Significato</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">KAMA</td><td style="padding:6px 10px;border:1px solid #d0d7de;">n=10, fast=2, slow=30</td><td style="padding:6px 10px;border:1px solid #d0d7de;">Media mobile adattiva. Si muove veloce in trend, lenta in laterale.</td></tr>
+          <tr style="background:#f6f8fa;"><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">ER (Efficiency Ratio)</td><td style="padding:6px 10px;border:1px solid #d0d7de;">n=10, range 0–1</td><td style="padding:6px 10px;border:1px solid #d0d7de;">&gt;0.5 = trend forte · &lt;0.3 = laterale/caotico</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">AO (Awesome Oscillator)</td><td style="padding:6px 10px;border:1px solid #d0d7de;">SMA5 − SMA34 midpoint</td><td style="padding:6px 10px;border:1px solid #d0d7de;">Momentum: positivo = forza rialzista · negativo = ribassista</td></tr>
+          <tr style="background:#f6f8fa;"><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">Baffetti AO</td><td style="padding:6px 10px;border:1px solid #d0d7de;">n barre AO consecutive crescenti</td><td style="padding:6px 10px;border:1px solid #d0d7de;">≥3 = momentum in accelerazione · segnale COMPRA</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">RSI</td><td style="padding:6px 10px;border:1px solid #d0d7de;">n=14, range 0–100</td><td style="padding:6px 10px;border:1px solid #d0d7de;">&gt;70 ipercomprato · &lt;30 ipervenduto · 50 equilibrio</td></tr>
+          <tr style="background:#f6f8fa;"><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">Trendycator</td><td style="padding:6px 10px;border:1px solid #d0d7de;">EMA21 vs EMA55</td><td style="padding:6px 10px;border:1px solid #d0d7de;">VERDE = uptrend · ROSSO = downtrend · GRIGIO = incerto</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">K%</td><td style="padding:6px 10px;border:1px solid #d0d7de;">(Prezzo/KAMA−1)×100</td><td style="padding:6px 10px;border:1px solid #d0d7de;">Distanza % del prezzo dalla KAMA. Positivo = sopra KAMA</td></tr>
+          <tr style="background:#f6f8fa;"><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">MM Align</td><td style="padding:6px 10px;border:1px solid #d0d7de;">Prezzo &gt; MM20 &gt; MM50 &gt; MM200</td><td style="padding:6px 10px;border:1px solid #d0d7de;">Allineamento bullish completo. Necessario per segnale LONG</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">Heikin Ashi</td><td style="padding:6px 10px;border:1px solid #d0d7de;">OHLC filtrato</td><td style="padding:6px 10px;border:1px solid #d0d7de;">Candele HA: verde pieno = trend forte · rosso pieno = pressione vendita</td></tr>
+          <tr style="background:#f6f8fa;"><td style="padding:6px 10px;border:1px solid #d0d7de;font-weight:600;">ATR</td><td style="padding:6px 10px;border:1px solid #d0d7de;">n=14</td><td style="padding:6px 10px;border:1px solid #d0d7de;">Volatilità media. Usato per calcolare il Trailing Stop (Prezzo − 2×ATR)</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="color:#1a7f37;border-bottom:2px solid #dafbe1;padding-bottom:6px;">🟢 Segnali di ENTRATA</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+        <div style="background:#dafbe1;border:1px solid #1a7f37;border-radius:8px;padding:12px;">
+          <div style="font-weight:700;color:#1a7f37;margin-bottom:6px;font-size:14px;">🟢 LONG — Segnale forte</div>
+          <div style="font-size:12px;">✓ Trendycator VERDE<br>✓ Prezzo &gt; KAMA<br>✓ ER ≥ 0.50<br>✓ Baffetti ≥ 3<br>✓ MM20 &gt; MM50 &gt; MM200</div>
+        </div>
+        <div style="background:#ddf4ff;border:1px solid #0969da;border-radius:8px;padding:12px;">
+          <div style="font-weight:700;color:#0969da;margin-bottom:6px;font-size:14px;">🔵 EARLY — Anticipo trend</div>
+          <div style="font-size:12px;">✓ Prezzo &gt; KAMA<br>✓ Baffetti ≥ 3<br>✓ Trendycator VERDE o GRIGIO<br><em style="opacity:0.6;">MM align non richiesto</em></div>
+        </div>
+        <div style="background:#fff8c5;border:1px solid #7d4e00;border-radius:8px;padding:12px;">
+          <div style="font-weight:700;color:#7d4e00;margin-bottom:6px;font-size:14px;">🟡 WATCH — Osservazione</div>
+          <div style="font-size:12px;">✓ Prezzo &gt; KAMA<br>✓ Baffetti ≥ 1<br>✓ Trendycator VERDE o GRIGIO<br><em style="opacity:0.6;">Momentum appena iniziato</em></div>
+        </div>
+        <div style="background:#fff1e5;border:1px solid #bc4c00;border-radius:8px;padding:12px;">
+          <div style="font-weight:700;color:#bc4c00;margin-bottom:6px;font-size:14px;">🟠 MEAN REVERSION</div>
+          <div style="font-size:12px;">✓ ER &lt; 0.30 (laterale)<br>✓ RSI &lt; 30 (ipervenduto)<br>✓ AO in risalita<br>✓ Prezzo vicino/sotto KAMA</div>
+        </div>
+      </div>
+
+      <h3 style="color:#cf222e;border-bottom:2px solid #ffebe9;padding-bottom:6px;">🔴 Segnali di USCITA</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;">
+        <div style="background:#ffebe9;border:1px solid #cf222e;border-radius:8px;padding:10px;font-size:12px;">
+          <div style="font-weight:700;color:#cf222e;margin-bottom:4px;">⛔ STOP</div>
+          <div>Prezzo &lt; KAMA<br>Trendycator ROSSO<br><em style="opacity:0.7;">Uscita immediata</em></div>
+        </div>
+        <div style="background:#ffebe9;border:1px solid #a40000;border-radius:8px;padding:10px;font-size:12px;">
+          <div style="font-weight:700;color:#a40000;margin-bottom:4px;">🔴 USCITA</div>
+          <div>Prezzo &lt; KAMA<br>Trendycator non ROSSO<br><em style="opacity:0.7;">Inversione probabile</em></div>
+        </div>
+        <div style="background:#fff8c5;border:1px solid #7d4e00;border-radius:8px;padding:10px;font-size:12px;">
+          <div style="font-weight:700;color:#7d4e00;margin-bottom:4px;">⚠️ ATTENZIONE</div>
+          <div>Prezzo &gt; KAMA<br>AO ≤ 0 o Trend GRIGIO<br><em style="opacity:0.7;">Momentum in calo</em></div>
+        </div>
+      </div>
+
+      <h3 style="color:#6e40c9;border-bottom:2px solid #f0e6ff;padding-bottom:6px;">🏆 Formula Score (0–200)</h3>
+      <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:14px;font-family:monospace;font-size:12px;margin-bottom:18px;line-height:1.9;">
+        score = ER×30 + min(Baffetti,10)×5 + min(|K%|,5)×3<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ max(−10,min(5,Perf7gg))×4<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ max(−20,min(10,Perf30gg))×2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (MM Align ? 10 : 0)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (AO &gt; 0 ? 5 : 0)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ (Cross≤3 ? 20 : Cross≤10 ? 12 : Cross≤20 ? 5 : 0)<br>
+        <span style="color:#cf222e;">se Trendycator ROSSO → score × 0.6</span>
+      </div>
+
+      <h3 style="color:#57606a;border-bottom:2px solid #d0d7de;padding-bottom:6px;">⏱️ Timeframe disponibili</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
+        <span style="background:#ddf4ff;color:#0969da;border:1px solid #0969da;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">5h — ultime 5 ore (intraday)</span>
+        <span style="background:#ddf4ff;color:#0969da;border:1px solid #0969da;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">1g — ultimo giorno</span>
+        <span style="background:#f6f8fa;color:#57606a;border:1px solid #d0d7de;border-radius:6px;padding:4px 12px;font-size:12px;">1s — ultima settimana</span>
+        <span style="background:#f6f8fa;color:#57606a;border:1px solid #d0d7de;border-radius:6px;padding:4px 12px;font-size:12px;">1m — ultimo mese</span>
+        <span style="background:#f6f8fa;color:#57606a;border:1px solid #d0d7de;border-radius:6px;padding:4px 12px;font-size:12px;">3m — 3 mesi</span>
+        <span style="background:#f6f8fa;color:#57606a;border:1px solid #d0d7de;border-radius:6px;padding:4px 12px;font-size:12px;">6m — 6 mesi</span>
+        <span style="background:#f6f8fa;color:#57606a;border:1px solid #d0d7de;border-radius:6px;padding:4px 12px;font-size:12px;">1a — 1 anno</span>
+      </div>
+      <p style="font-size:11px;color:#57606a;margin:0;">I dati grafici provengono da <strong>raptor_chart.json</strong> generato da GitHub Actions ogni giorno alle 08:00. I timeframe 5h e 1g usano barre orarie; gli altri usano barre giornaliere filtrate.</p>
+    </div>
   </div>
 </div>
 
@@ -768,7 +867,7 @@ const BATCH=20, DELAY=350;
 // ═══════════════════════════════════════════════════════════════════
 //  CARICA JSON DA GITHUB (fonte primaria — nessun proxy, nessun CORS)
 // ═══════════════════════════════════════════════════════════════════
-const JSON_URL='raptor_data.json';
+const JSON_URL='https://raw.githubusercontent.com/Giorgiogoldoni/fixed/main/raptor_data.json';
 const MAX_AGE_HOURS=2; // dopo quanto tempo il JSON è considerato "vecchio"
 
 async function loadFromJSON(){
@@ -1490,236 +1589,249 @@ function exportExcel(){
 // ═══════════════════════════════════════════════════════════════════
 //  CHART MODE
 // ═══════════════════════════════════════════════════════════════════
+const CHART_JSON='https://raw.githubusercontent.com/Giorgiogoldoni/fixed/main/raptor_chart.json';
 let chartInstances={};
 let currentChartData=null;
-let currentTF='1d_1y';
+let currentTF='1m';
 let currentSym='',currentSrc='yahoo';
+let chartJsonCache=null;
+
+function openSpecs(){ document.getElementById('specsModal').style.display='block'; document.body.style.overflow='hidden'; }
+function closeSpecs(){ document.getElementById('specsModal').style.display='none'; document.body.style.overflow=''; }
+
+async function getChartJson(){
+  if(chartJsonCache) return chartJsonCache;
+  const res=await fetch(CHART_JSON,{cache:'no-store'});
+  if(!res.ok) throw new Error('JSON HTTP '+res.status);
+  chartJsonCache=await res.json();
+  return chartJsonCache;
+}
+
+// TF → {useHourly, nDays, nHours}
+function tfParams(tf){
+  if(tf==='5h')  return {hourly:true, n:5};
+  if(tf==='1d')  return {hourly:true, n:40};
+  if(tf==='1w')  return {hourly:false, n:5};
+  if(tf==='1m')  return {hourly:false, n:21};
+  if(tf==='3m')  return {hourly:false, n:63};
+  if(tf==='6m')  return {hourly:false, n:126};
+  return              {hourly:false, n:252}; // 1y
+}
 
 async function initChartMode(sym,name,src){
-  currentSym=sym;currentSrc=src;
+  currentSym=sym; currentSrc=src;
   const decodedName=decodeURIComponent(name);
   document.getElementById('chartTitle').textContent=sym+(decodedName?' — '+decodedName:'');
-  document.getElementById('chartSub').textContent=src==='stooq'?'Fonte: STOOQ':'Fonte: Yahoo Finance';
-
-  // disable intraday for stooq
-  if(src==='stooq'){
-    ['tf5m','tf15m','tf1h'].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el) el.classList.add('disabled');
-    });
-  }
-
+  document.getElementById('chartSub').textContent='Fonte: '+( src==='stooq'?'STOOQ':'Yahoo Finance')+' · dati da raptor_chart.json';
   document.getElementById('loadOverlay').style.display='flex';
-  await loadChartData(sym,src,'1d','1y');
+  document.getElementById('loadMsg').textContent='Caricamento dati...';
+  // default active btn = 1m
+  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+  const defBtn=document.querySelector('.tf-btn[data-tf="1m"]');
+  if(defBtn) defBtn.classList.add('active');
+  currentTF='1m';
+  await loadChartData(sym,src,currentTF);
 }
 
 async function setTF(btn){
+  if(btn.id==='btnSpecs') return;
   document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   currentTF=btn.dataset.tf;
-  const [interval,range]=currentTF.split('_');
   document.getElementById('loadOverlay').style.display='flex';
-  await loadChartData(currentSym,currentSrc,interval,range);
+  document.getElementById('loadMsg').textContent='Caricamento dati...';
+  await loadChartData(currentSym,currentSrc,currentTF);
 }
 
-async function loadChartData(sym,src,interval,range){
+async function loadChartData(sym,src,tf){
   try{
-    let c,h,l,v,t;
-    if(src==='stooq'){
-      const d=await fetchStooq(sym);
-      c=d.closes;h=d.highs;l=d.lows;v=d.vols;t=d.timestamps;
+    const p=tfParams(tf);
+    let bars=[];
+
+    // Try raptor_chart.json first
+    try{
+      const j=await getChartJson();
+      // match by yahoo symbol — find entry where key == sym (case-insensitive)
+      const key=Object.keys(j.data||{}).find(k=>k.toLowerCase()===sym.toLowerCase());
+      if(key){
+        const raw=p.hourly ? j.data[key].h : j.data[key].d;
+        bars=(raw||[]).slice(-(p.n));
+      }
+    }catch(e){ console.warn('chart JSON error:',e); }
+
+    let c=[],h=[],l=[],v=[],t=[];
+    if(bars.length>=10){
+      bars.forEach(b=>{ t.push(b[0]);c.push(b[4]);h.push(b[2]);l.push(b[3]);v.push(b[5]||0); });
+      // fix open not saved — use prev close
+      document.getElementById('chartSub').textContent='Fonte: raptor_chart.json · '+new Date().toLocaleDateString('it-IT');
     } else {
-      const raw=await fetchYahoo(sym,interval,range);
-      const q=raw.indicators.quote[0];
-      const ts=raw.timestamp;
-      c=[];h=[];l=[];v=[];t=[];
-      for(let i=0;i<ts.length;i++){
-        if(q.close[i]!=null&&q.high[i]!=null&&q.low[i]!=null){
-          c.push(q.close[i]);h.push(q.high[i]);l.push(q.low[i]);
-          v.push(q.volume[i]||0);t.push(ts[i]);
+      // Fallback: live fetch (may fail on GitHub Pages)
+      document.getElementById('loadMsg').textContent='JSON non disponibile, tentativo live...';
+      if(src==='stooq'){
+        const d=await fetchStooq(sym);
+        c=d.closes.slice(-p.n);h=d.highs.slice(-p.n);
+        l=d.lows.slice(-p.n);v=d.vols.slice(-p.n);t=d.timestamps.slice(-p.n);
+      } else {
+        const yInt=p.hourly?'1h':'1d';
+        const yRange=p.hourly?'5d':tf==='1w'?'1mo':tf==='1m'?'3mo':tf==='3m'?'6mo':tf==='6m'?'1y':'2y';
+        const raw=await fetchYahoo(sym,yInt,yRange);
+        const q=raw.indicators.quote[0];
+        const ts=raw.timestamp;
+        for(let i=0;i<ts.length;i++){
+          if(q.close[i]!=null&&q.high[i]!=null&&q.low[i]!=null){
+            c.push(q.close[i]);h.push(q.high[i]);l.push(q.low[i]);
+            v.push(q.volume[i]||0);t.push(ts[i]);
+          }
         }
+        c=c.slice(-p.n);h=h.slice(-p.n);l=l.slice(-p.n);v=v.slice(-p.n);t=t.slice(-p.n);
       }
     }
 
-    currentChartData={c,h,l,v,t,interval};
-    renderAllPanels(c,h,l,v,t,interval);
+    if(!c.length) throw new Error('Nessun dato disponibile per questo ticker');
+    currentChartData={c,h,l,v,t,tf};
+    renderAllPanels(c,h,l,v,t,tf);
     updateInfoBar(c,h,l,v);
     document.getElementById('loadOverlay').style.display='none';
   } catch(e){
-    document.getElementById('loadMsg').textContent='Errore caricamento: '+e.message;
+    document.getElementById('loadMsg').textContent='Errore: '+e.message;
   }
 }
 
-function fmtLabel(ts,interval){
+function fmtLabel(ts,tf){
   const d=new Date(ts*1000);
-  if(interval==='1d') return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear().toString().slice(2);
-  return d.getHours()+':'+(d.getMinutes().toString().padStart(2,'0'));
+  if(tf==='5h'||tf==='1d') return d.getHours()+':'+(d.getMinutes().toString().padStart(2,'0'));
+  if(tf==='1w'||tf==='1m') return d.getDate()+'/'+(d.getMonth()+1);
+  return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear().toString().slice(2);
 }
 
 function destroyChart(id){
   if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}
 }
 
-function renderAllPanels(c,h,l,v,t,interval){
-  const labels=t.map(ts=>fmtLabel(ts,interval));
+function renderAllPanels(c,h,l,v,t,tf){
+  const labels=t.map(ts=>fmtLabel(ts,tf));
   const kama=calcKAMA(c);
   const ao=calcAO(h,l);
-  const rsiArr=[];
-  for(let i=0;i<c.length;i++){
-    rsiArr.push(calcRSI(c.slice(0,i+1)));
-  }
+  const rsiArr=c.map((_,i)=>calcRSI(c.slice(0,i+1)));
   const mm20=sma(c,20),mm50=sma(c,50),mm200=sma(c,200);
-  const {haO,haH,haL,haC}=calcHeikinAshi(
-    h.map((_,i)=>i===0?c[0]:c[i]), h, l, c
-  );
+  const {haO,haH,haL,haC}=calcHeikinAshi(h.map((_,i)=>i===0?c[0]:c[i]),h,l,c);
+  const volColors=c.map((x,i)=>i===0?'rgba(9,105,218,0.4)':c[i]>=c[i-1]?'rgba(26,127,55,0.5)':'rgba(207,34,46,0.5)');
 
-  // volumes for color
-  const volColors=c.map((v,i)=>i===0?'rgba(9,105,218,0.4)':c[i]>=c[i-1]?'rgba(26,127,55,0.5)':'rgba(207,34,46,0.5)');
-
-  // ── P1: Price + KAMA + MM ────────────────────
+  // ── P1: Price + KAMA + MMs ─────────────────────────────────────
   destroyChart('p1');
-  const ctx1=document.getElementById('p1').getContext('2d');
-  chartInstances.p1=new Chart(ctx1,{
+  chartInstances.p1=new Chart(document.getElementById('p1').getContext('2d'),{
     type:'line',
-    data:{
-      labels,
-      datasets:[
-        {label:'Prezzo',data:c,borderColor:'#1f2328',borderWidth:1.5,pointRadius:0,fill:false,tension:0},
-        {label:'KAMA',data:kama,borderColor:'#f0883e',borderWidth:2,pointRadius:0,fill:false,tension:0,spanGaps:true},
-        {label:'MM20',data:mm20,borderColor:'#58a6ff',borderWidth:1,pointRadius:0,fill:false,tension:0,spanGaps:true,borderDash:[3,3]},
-        {label:'MM50',data:mm50,borderColor:'#e3b341',borderWidth:1,pointRadius:0,fill:false,tension:0,spanGaps:true,borderDash:[5,3]},
-        {label:'MM200',data:mm200,borderColor:'#bc8cff',borderWidth:1,pointRadius:0,fill:false,tension:0,spanGaps:true,borderDash:[8,4]},
-      ]
-    },
+    data:{labels,datasets:[
+      {label:'Prezzo',data:c,borderColor:'#1f2328',borderWidth:1.5,pointRadius:0,fill:false,tension:0},
+      {label:'KAMA', data:kama,borderColor:'#f0883e',borderWidth:2,pointRadius:0,fill:false,tension:0,spanGaps:true},
+      {label:'MM20', data:mm20,borderColor:'#58a6ff',borderWidth:1,pointRadius:0,fill:false,tension:0,spanGaps:true,borderDash:[3,3]},
+      {label:'MM50', data:mm50,borderColor:'#e3b341',borderWidth:1,pointRadius:0,fill:false,tension:0,spanGaps:true,borderDash:[5,3]},
+      {label:'MM200',data:mm200,borderColor:'#bc8cff',borderWidth:1,pointRadius:0,fill:false,tension:0,spanGaps:true,borderDash:[8,4]},
+    ]},
     options:chartOpts('P1',labels.length)
   });
 
-  // ── P2: Heikin-Ashi ─────────────────────────
+  // ── P2: Heikin-Ashi migliorato (High-Low wick + corpo) ─────────
   destroyChart('p2');
-  const ctx2=document.getElementById('p2').getContext('2d');
-  // candlestick-like via bar chart
-  chartInstances.p2=new Chart(ctx2,{
+  // Mostriamo: HA close−open come barra colorata + HA high/low come barre di volatilità
+  const haRange=haC.map((v,i)=>haH[i]-haL[i]);
+  const haBody=haC.map((v,i)=>Math.abs(v-haO[i]));
+  chartInstances.p2=new Chart(document.getElementById('p2').getContext('2d'),{
     type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        label:'HA Close',
-        data:haC,
-        backgroundColor:haC.map((v,i)=>v>=haO[i]?'rgba(26,127,55,0.75)':'rgba(207,34,46,0.75)'),
+    data:{labels,datasets:[
+      {label:'HA Corpo',data:haBody,
+        backgroundColor:haC.map((v,i)=>v>=haO[i]?'rgba(26,127,55,0.80)':'rgba(207,34,46,0.80)'),
         borderColor:haC.map((v,i)=>v>=haO[i]?'#1a7f37':'#cf222e'),
-        borderWidth:1
-      }]
-    },
+        borderWidth:1},
+      {label:'HA Range',data:haRange,
+        backgroundColor:haC.map((v,i)=>v>=haO[i]?'rgba(26,127,55,0.20)':'rgba(207,34,46,0.20)'),
+        borderWidth:0,type:'bar'}
+    ]},
     options:{
       ...chartOpts('HA',labels.length),
       scales:{
-        x:{display:false},
-        y:{grid:{color:'rgba(208,215,222,.5)'},ticks:{color:'#57606a',font:{size:10}}}
+        x:{display:labels.length<=60,ticks:{color:'#57606a',font:{size:10},maxTicksLimit:10},grid:{color:'rgba(208,215,222,.4)'}},
+        y:{grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:10}}}
       }
     }
   });
 
-  // ── BAFFETTI strip ────────────────────────────
+  // ── BAFFETTI — pannello dedicato con segnale COMPRA/FUORI ───────
   destroyChart('pBaf');
-  const bafData=ao.map((v,i)=>{
-    if(v===null||ao[i-1]===null) return null;
-    return v>ao[i-1]?1:0; // 1=baff, 0=no
+  // calcola baffetti consecutivi per ogni barra
+  const bafCount=ao.map((v,i)=>{
+    if(v===null) return 0;
+    let n=0;
+    for(let j=i;j>0;j--){
+      if(ao[j]!==null&&ao[j-1]!==null&&ao[j]>ao[j-1]) n++;
+      else break;
+    }
+    return n;
   });
-  const ctxB=document.getElementById('pBaf').getContext('2d');
-  chartInstances.pBaf=new Chart(ctxB,{
+  const bafColors=bafCount.map(n=>
+    n>=3?'rgba(26,127,55,0.85)':n>=1?'rgba(240,136,62,0.7)':'rgba(208,215,222,0.5)'
+  );
+  const lastBaf=bafCount[bafCount.length-1]||0;
+  const lastAO=ao.filter(x=>x!==null).pop()||0;
+  const bafEl=document.getElementById('bafSignal');
+  if(bafEl){
+    if(lastBaf>=3&&lastAO>0){bafEl.textContent='✅ COMPRA (Baf='+lastBaf+')';bafEl.style.cssText='color:#1a7f37;background:#dafbe1;border:1px solid #1a7f37;font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;';}
+    else if(lastBaf>=1&&lastAO>0){bafEl.textContent='🟡 ATTESA (Baf='+lastBaf+')';bafEl.style.cssText='color:#7d4e00;background:#fff8c5;border:1px solid #7d4e00;font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;';}
+    else{bafEl.textContent='⛔ FUORI';bafEl.style.cssText='color:#cf222e;background:#ffebe9;border:1px solid #cf222e;font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;';}
+  }
+  const legEl=document.getElementById('bafLegend');
+  if(legEl) legEl.innerHTML='<span style="color:#1a7f37">■ ≥3 baffetti = COMPRA</span><span style="color:#bc4c00">■ 1-2 baffetti = attesa</span><span style="color:#8b949e">■ 0 = fuori / ribasso</span>';
+  chartInstances.pBaf=new Chart(document.getElementById('pBaf').getContext('2d'),{
     type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        label:'Baffetti',
-        data:bafData,
-        backgroundColor:bafData.map(v=>v?'rgba(240,136,62,0.8)':'rgba(208,215,222,0.4)'),
-        borderWidth:0
-      }]
-    },
+    data:{labels,datasets:[{label:'Baffetti',data:bafCount,backgroundColor:bafColors,borderWidth:0}]},
     options:{
       responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-      scales:{x:{display:false},y:{display:false,min:0,max:1}}
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'Baffetti: '+ctx.parsed.y}}},
+      scales:{x:{display:false},y:{grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:9},stepSize:1},min:0,max:Math.max(5,...bafCount)}}
     }
   });
 
-  // ── P3: AO ─────────────────────────────────
+  // ── P3: AO ─────────────────────────────────────────────────────
   destroyChart('p3');
-  const ctx3=document.getElementById('p3').getContext('2d');
-  chartInstances.p3=new Chart(ctx3,{
+  chartInstances.p3=new Chart(document.getElementById('p3').getContext('2d'),{
     type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        label:'AO',
-        data:ao,
-        backgroundColor:ao.map((v,i)=>{
-          if(v===null) return 'transparent';
-          if(i===0) return v>=0?'rgba(26,127,55,0.75)':'rgba(207,34,46,0.75)';
-          const prev=ao[i-1];
-          if(v>=0) return v>=(prev||0)?'rgba(26,127,55,0.75)':'rgba(26,127,55,0.25)';
-          return v<=(prev||0)?'rgba(207,34,46,0.75)':'rgba(207,34,46,0.25)';
-        }),
-        borderWidth:0
-      }]
-    },
-    options:{
-      ...chartOpts('AO',labels.length),
-      scales:{
-        x:{display:false},
-        y:{grid:{color:'rgba(208,215,222,.5)'},ticks:{color:'#57606a',font:{size:10}}}
-      }
-    }
+    data:{labels,datasets:[{label:'AO',data:ao,
+      backgroundColor:ao.map((v,i)=>{
+        if(v===null) return 'transparent';
+        const prev=ao[i-1];
+        if(v>=0) return v>=(prev||0)?'rgba(26,127,55,0.80)':'rgba(26,127,55,0.30)';
+        return v<=(prev||0)?'rgba(207,34,46,0.80)':'rgba(207,34,46,0.30)';
+      }),borderWidth:0}]},
+    options:{...chartOpts('AO',labels.length),scales:{x:{display:false},y:{grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:10}}}}}
   });
 
-  // ── P4: RSI ─────────────────────────────────
+  // ── P4: RSI ─────────────────────────────────────────────────────
   destroyChart('p4');
-  const ctx4=document.getElementById('p4').getContext('2d');
-  chartInstances.p4=new Chart(ctx4,{
+  chartInstances.p4=new Chart(document.getElementById('p4').getContext('2d'),{
     type:'line',
-    data:{
-      labels,
-      datasets:[
-        {label:'RSI',data:rsiArr,borderColor:'#e3b341',borderWidth:1.5,pointRadius:0,fill:false,tension:0.3,spanGaps:true},
-        {label:'70',data:new Array(c.length).fill(70),borderColor:'rgba(207,34,46,0.35)',borderWidth:1,pointRadius:0,borderDash:[4,4],fill:false},
-        {label:'30',data:new Array(c.length).fill(30),borderColor:'rgba(26,127,55,0.35)',borderWidth:1,pointRadius:0,borderDash:[4,4],fill:false},
-      ]
-    },
-    options:{
-      ...chartOpts('RSI',labels.length),
-      scales:{
-        x:{display:false},
-        y:{min:0,max:100,grid:{color:'rgba(208,215,222,.5)'},ticks:{color:'#57606a',font:{size:10}}}
-      }
-    }
+    data:{labels,datasets:[
+      {label:'RSI',data:rsiArr,borderColor:'#e3b341',borderWidth:1.5,pointRadius:0,fill:false,tension:0.3,spanGaps:true},
+      {label:'70',data:new Array(c.length).fill(70),borderColor:'rgba(207,34,46,0.35)',borderWidth:1,pointRadius:0,borderDash:[4,4],fill:false},
+      {label:'30',data:new Array(c.length).fill(30),borderColor:'rgba(26,127,55,0.35)',borderWidth:1,pointRadius:0,borderDash:[4,4],fill:false},
+    ]},
+    options:{...chartOpts('RSI',labels.length),scales:{x:{display:false},y:{min:0,max:100,grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:10}}}}}
   });
 
-  // ── P5: Volume ───────────────────────────────
+  // ── P5: Volume ──────────────────────────────────────────────────
   destroyChart('p5');
-  const ctx5=document.getElementById('p5').getContext('2d');
   const vAvg20=sma(v,20);
-  chartInstances.p5=new Chart(ctx5,{
+  chartInstances.p5=new Chart(document.getElementById('p5').getContext('2d'),{
     type:'bar',
-    data:{
-      labels,
-      datasets:[
-        {label:'Volume',data:v,backgroundColor:volColors,borderWidth:0},
-        {label:'Media 20',data:vAvg20,type:'line',borderColor:'rgba(9,105,218,0.8)',
-         borderWidth:1.5,pointRadius:0,fill:false,spanGaps:true}
-      ]
-    },
-    options:{
-      ...chartOpts('VOL',labels.length),
-      scales:{
-        x:{display:false},
-        y:{grid:{color:'rgba(208,215,222,.5)'},ticks:{color:'#8b949e',font:{size:10},
-          callback:v=>v>=1e6?(v/1e6).toFixed(0)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v}}
-      }
-    }
+    data:{labels,datasets:[
+      {label:'Volume',data:v,backgroundColor:volColors,borderWidth:0},
+      {label:'Media 20',data:vAvg20,type:'line',borderColor:'rgba(9,105,218,0.8)',borderWidth:1.5,pointRadius:0,fill:false,spanGaps:true}
+    ]},
+    options:{...chartOpts('VOL',labels.length),scales:{
+      x:{display:false},
+      y:{grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:10},callback:x=>x>=1e6?(x/1e6).toFixed(0)+'M':x>=1e3?(x/1e3).toFixed(0)+'K':x}}
+    }}
   });
 }
-
 function chartOpts(label,n){
   return{
     responsive:true,maintainAspectRatio:true,
@@ -1730,15 +1842,11 @@ function chartOpts(label,n){
     }},
     scales:{
       x:{
-        display:n<=100,
-        ticks:{color:'#57606a',font:{size:10},maxRotation:0,
-          maxTicksLimit:12,autoSkip:true},
-        grid:{color:'rgba(208,215,222,.5)'}
+        display:n<=120,
+        ticks:{color:'#57606a',font:{size:10},maxRotation:0,maxTicksLimit:10,autoSkip:true},
+        grid:{color:'rgba(208,215,222,.4)'}
       },
-      y:{
-        grid:{color:'rgba(208,215,222,.5)'},
-        ticks:{color:'#57606a',font:{size:10}}
-      }
+      y:{grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:10}}}
     },
     animation:{duration:0},
     interaction:{mode:'index',intersect:false}
