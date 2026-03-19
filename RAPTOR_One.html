@@ -1731,22 +1731,18 @@ function renderAllPanels(c,h,l,v,t,tf){
     options:chartOpts('P1',labels.length)
   });
 
-  // ── P2: Heikin-Ashi migliorato (High-Low wick + corpo) ─────────
+  // ── P2: Heikin-Ashi ─────────────────────────────────────────────
   destroyChart('p2');
-  // Mostriamo: HA close−open come barra colorata + HA high/low come barre di volatilità
-  const haRange=haC.map((v,i)=>haH[i]-haL[i]);
-  const haBody=haC.map((v,i)=>Math.abs(v-haO[i]));
   chartInstances.p2=new Chart(document.getElementById('p2').getContext('2d'),{
     type:'bar',
-    data:{labels,datasets:[
-      {label:'HA Corpo',data:haBody,
-        backgroundColor:haC.map((v,i)=>v>=haO[i]?'rgba(26,127,55,0.80)':'rgba(207,34,46,0.80)'),
-        borderColor:haC.map((v,i)=>v>=haO[i]?'#1a7f37':'#cf222e'),
-        borderWidth:1},
-      {label:'HA Range',data:haRange,
-        backgroundColor:haC.map((v,i)=>v>=haO[i]?'rgba(26,127,55,0.20)':'rgba(207,34,46,0.20)'),
-        borderWidth:0,type:'bar'}
-    ]},
+    data:{labels,datasets:[{
+      label:'HA Close',
+      data:haC,
+      backgroundColor:haC.map((v,i)=>v>=haO[i]?'rgba(26,127,55,0.80)':'rgba(207,34,46,0.80)'),
+      borderColor:haC.map((v,i)=>v>=haO[i]?'#1a7f37':'#cf222e'),
+      borderWidth:1,
+      barPercentage:0.9,categoryPercentage:1.0
+    }]},
     options:{
       ...chartOpts('HA',labels.length),
       scales:{
