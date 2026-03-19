@@ -171,8 +171,8 @@ tr:hover td{background:#f0f6ff}
 .panel{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
 .panel-title{padding:6px 12px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);
   background:var(--bg3)}
-.panel-body{position:relative}
-.panel-body canvas{display:block}
+.panel-body{position:relative;overflow:hidden}
+.panel-body canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important}
 
 /* ═══ LOADING OVERLAY ════════════════════════ */
 #loadOverlay{position:fixed;inset:0;background:rgba(245,247,250,.92);display:flex;
@@ -225,6 +225,7 @@ tr:hover td{background:#f0f6ff}
   <button id="btnReload" onclick="loadFromJSON()" title="Ricarica dati da GitHub">🔄 Aggiorna</button>
   <button id="btnRun" onclick="startScan()" title="Scan manuale via proxy">⚡ CALCOLA</button>
   <button id="btnExcel" onclick="exportExcel()">📥 Excel</button>
+  <button id="btnSpecsTable" onclick="openSpecs()" title="Specifiche tecniche indicatori" style="background:#fff8c5;border:1px solid #7d4e00;color:#7d4e00;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">📄 Specifiche</button>
 </div>
 
 <!-- TIMESTAMP / SMART REFRESH BAR -->
@@ -366,23 +367,23 @@ tr:hover td{background:#f0f6ff}
 
   <div id="panels">
     <div class="panel"><div class="panel-title">P1 — PREZZO + KAMA + MM20 + MM50 + MM200 · Segnali</div>
-      <div class="panel-body"><canvas id="p1" height="260"></canvas></div></div>
+      <div class="panel-body" style="height:260px"><canvas id="p1"></canvas></div></div>
     <div class="panel" id="panelHA"><div class="panel-title">P2 — HEIKIN-ASHI · Trend filtrato</div>
-      <div class="panel-body"><canvas id="p2" height="180"></canvas></div></div>
+      <div class="panel-body" style="height:180px"><canvas id="p2"></canvas></div></div>
     <div class="panel" id="panelBaf">
       <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
         <span>BAFFETTI AO — Momentum consecutivo · Segnale COMPRA / FUORI</span>
         <span id="bafSignal" style="font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;"></span>
       </div>
-      <div class="panel-body"><canvas id="pBaf" height="90"></canvas></div>
+      <div class="panel-body" style="height:90px"><canvas id="pBaf"></canvas></div>
       <div id="bafLegend" style="padding:4px 12px 8px;font-size:11px;color:#57606a;display:flex;gap:16px;flex-wrap:wrap;"></div>
     </div>
     <div class="panel"><div class="panel-title">P3 — AO (Awesome Oscillator)</div>
-      <div class="panel-body"><canvas id="p3" height="120"></canvas></div></div>
+      <div class="panel-body" style="height:120px"><canvas id="p3"></canvas></div></div>
     <div class="panel"><div class="panel-title">P4 — RSI(14)</div>
-      <div class="panel-body"><canvas id="p4" height="100"></canvas></div></div>
+      <div class="panel-body" style="height:100px"><canvas id="p4"></canvas></div></div>
     <div class="panel"><div class="panel-title">P5 — VOLUME · vs Media 20gg</div>
-      <div class="panel-body"><canvas id="p5" height="80"></canvas></div></div>
+      <div class="panel-body" style="height:80px"><canvas id="p5"></canvas></div></div>
   </div>
 </div>
 
@@ -1733,6 +1734,7 @@ function renderAllPanels(c,h,l,v,t,tf){
 
   // ── P2: Heikin-Ashi ─────────────────────────────────────────────
   destroyChart('p2');
+  const haMin=Math.min(...haC)*0.995;
   chartInstances.p2=new Chart(document.getElementById('p2').getContext('2d'),{
     type:'bar',
     data:{labels,datasets:[{
@@ -1744,10 +1746,12 @@ function renderAllPanels(c,h,l,v,t,tf){
       barPercentage:0.9,categoryPercentage:1.0
     }]},
     options:{
-      ...chartOpts('HA',labels.length),
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:0},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,backgroundColor:'rgba(255,255,255,0.97)',titleColor:'#1f2328',bodyColor:'#57606a',borderColor:'#d0d7de',borderWidth:1}},
       scales:{
         x:{display:labels.length<=60,ticks:{color:'#57606a',font:{size:10},maxTicksLimit:10},grid:{color:'rgba(208,215,222,.4)'}},
-        y:{grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:10}}}
+        y:{min:haMin,grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:10}}}
       }
     }
   });
@@ -1781,7 +1785,7 @@ function renderAllPanels(c,h,l,v,t,tf){
     type:'bar',
     data:{labels,datasets:[{label:'Baffetti',data:bafCount,backgroundColor:bafColors,borderWidth:0}]},
     options:{
-      responsive:true,maintainAspectRatio:true,
+      responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'Baffetti: '+ctx.parsed.y}}},
       scales:{x:{display:false},y:{grid:{color:'rgba(208,215,222,.4)'},ticks:{color:'#57606a',font:{size:9},stepSize:1},min:0,max:Math.max(5,...bafCount)}}
     }
@@ -1830,7 +1834,7 @@ function renderAllPanels(c,h,l,v,t,tf){
 }
 function chartOpts(label,n){
   return{
-    responsive:true,maintainAspectRatio:true,
+    responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{
       mode:'index',intersect:false,
       backgroundColor:'rgba(255,255,255,0.97)',titleColor:'#1f2328',bodyColor:'#57606a',
