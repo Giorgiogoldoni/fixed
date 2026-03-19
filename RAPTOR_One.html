@@ -876,7 +876,7 @@ async function loadFromJSON(){
   tsBar.style.display='flex';
   tsEl.innerHTML='⏳ <strong>Carico dati da GitHub...</strong> attendere';
   try{
-    const res=await fetch(JSON_URL,{cache:'no-store',headers:{'pragma':'no-cache','cache-control':'no-cache'}});
+    const res=await fetch(JSON_URL);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const obj=await res.json();
     if(!obj.data||!obj.data.length) throw new Error('JSON vuoto');
