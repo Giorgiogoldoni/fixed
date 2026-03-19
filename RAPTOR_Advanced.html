@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>🦅 RAPTOR Advanced Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -65,7 +64,7 @@ button:hover,button.act{background:#eff6ff;border-color:#3b82f6;color:#2563eb}
 .chart-section{background:#fff;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:8px;padding:10px 12px}
 .chart-title{font-size:10px;color:#2563eb;letter-spacing:1px;margin-bottom:6px}
 .chart-wrap{position:relative}
-canvas{display:block}
+.chart-wrap canvas{display:block;width:100%!important}
 /* Sizing */
 .sizing{background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;margin-bottom:10px}
 .sz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px;margin-top:8px}
@@ -80,24 +79,7 @@ canvas{display:block}
 .cats{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
 .cat-btn{background:#fff;border:1px solid #e2e8f0;color:#64748b;padding:3px 7px;border-radius:3px;cursor:pointer;font-size:9px;font-family:inherit}
 .cat-btn:hover,.cat-btn.act{background:#eff6ff;border-color:#3b82f6;color:#2563eb}
-
-.btn-excel-adv{
-  background:#16a34a;border:none;color:#fff;
-  padding:6px 14px;border-radius:6px;cursor:pointer;
-  font-size:12px;font-weight:700;margin:6px 0 4px 0;
-  display:inline-block;transition:filter .15s;
-}
-.btn-excel-adv:hover{filter:brightness(1.1)}
-
-
-/* P6 Heikin-Ashi */
-#p6Wrap{width:100%;height:320px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;}
-.ha-legend{display:flex;gap:12px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-bottom:none;border-radius:6px 6px 0 0;font-size:10px;flex-wrap:wrap;align-items:center;}
-.ha-legend span{display:flex;align-items:center;gap:4px;}
-.ha-dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
-
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="hdr">
@@ -134,12 +116,13 @@ canvas{display:block}
 
 <!-- Controlli intervallo -->
 <div class="ctrl">
-  <button onclick="setIv('5m','1d')"  id="iv5m"  class="act">5 min</button>
-  <button onclick="setIv('15m','5d')" id="iv15m">15 min</button>
-  <button onclick="setIv('1h','1mo')" id="iv1h">1 ora</button>
-  <button onclick="setIv('1d','1y')"  id="iv1d">Daily 1a</button>
-  <button onclick="setIv('1d','3mo')" id="iv3m">Daily 3m</button>
-  <button onclick="setIv('1d','5y')"  id="iv5d">Daily 5a</button>
+  <button onclick="setTF('5h')"  id="tf5h">5h</button>
+  <button onclick="setTF('1d')"  id="tf1d">1g</button>
+  <button onclick="setTF('1w')"  id="tf1w">1s</button>
+  <button onclick="setTF('1m')"  id="tf1m" class="act">1m</button>
+  <button onclick="setTF('3m')"  id="tf3m">3m</button>
+  <button onclick="setTF('6m')"  id="tf6m">6m</button>
+  <button onclick="setTF('1y')"  id="tf1y">1a</button>
   <button onclick="loadData()" id="btnGo">▶ CARICA</button>
   <button onclick="loadData()" title="Refresh" style="font-size:14px">↻</button>
 </div>
@@ -263,20 +246,6 @@ canvas{display:block}
 <div class="chart-section">
   <div class="chart-title">P5 — RIBASSO: MAX(0, KAMA − PREZZO)</div>
   <div class="chart-wrap"><canvas id="c5" height="60"></canvas></div>
-</div>
-
-
-<!-- ── PANNELLO 6: Heikin-Ashi Candlestick ── -->
-<div class="chart-section" id="p6Section">
-  <div class="chart-title">P6 — HEIKIN-ASHI CANDLESTICK</div>
-  <div class="ha-legend">
-    <span><span class="ha-dot" style="background:#22c55e"></span> Rialzo (no shadow inf.)</span>
-    <span><span class="ha-dot" style="background:#86efac"></span> Rialzo (con shadow)</span>
-    <span><span class="ha-dot" style="background:#ef4444"></span> Ribasso (no shadow sup.)</span>
-    <span><span class="ha-dot" style="background:#fca5a5"></span> Ribasso (con shadow)</span>
-    <span id="haLegendSignal" style="margin-left:auto;font-weight:700;"></span>
-  </div>
-  <div id="p6Wrap"></div>
 </div>
 
 <!-- Position Sizing -->
@@ -468,14 +437,21 @@ function selectTicker(y,cls,name){
   loadData();
 }
 
-function setIv(iv,rng){
-  currentIv=iv;currentRange=rng;
-  ['5m','15m','1h','1d','3m','5d'].forEach(x=>{const b=document.getElementById('iv'+x);if(b)b.classList.remove('act');});
-  const ids={'5m':'iv5m','15m':'iv15m','1h':'iv1h','1d':'iv1d','3mo':'iv3m','5y':'iv5d'};
-  const bid=ids[iv]||(rng==='5y'?'iv5d':'iv1d');
-  const el=document.getElementById(bid);if(el)el.classList.add('act');
+const CHART_JSON_ADV='https://raw.githubusercontent.com/Giorgiogoldoni/fixed/main/raptor_chart.json';
+let chartJsonAdvCache=null;
+let currentTF='1m';
+
+function tfBars(tf){ return {'5h':{h:true,n:5},'1d':{h:true,n:40},'1w':{h:false,n:5},'1m':{h:false,n:21},'3m':{h:false,n:63},'6m':{h:false,n:126},'1y':{h:false,n:252}}[tf]||{h:false,n:21}; }
+
+function setTF(tf){
+  currentTF=tf;
+  ['5h','1d','1w','1m','3m','6m','1y'].forEach(x=>{const b=document.getElementById('tf'+x);if(b)b.classList.remove('act');});
+  const el=document.getElementById('tf'+tf);if(el)el.classList.add('act');
   if(currentTicker)loadData();
 }
+
+// Keep old setIv for compatibility
+function setIv(iv,rng){ loadData(); }
 
 function f3(v){return v!=null?typeof v==='number'?v.toFixed(3):'—':'—';}
 function f2(v){return v!=null?v.toFixed(2):'—';}
@@ -486,89 +462,6 @@ function fDate(ts){return new Date(ts*1000).toLocaleDateString('it-IT',{day:'2-d
 // ═══════════════════════════════════════════════════════
 // LOAD DATA
 // ═══════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════
-//  P6 — HEIKIN-ASHI LIGHTWEIGHT CHART
-// ═══════════════════════════════════════════
-let p6Chart = null;
-let p6Series = null;
-
-function buildP6(haO, haH, haL, haC, timestamps) {
-  const wrap = document.getElementById('p6Wrap');
-  if (!wrap) return;
-
-  // Distruggi chart precedente se esiste
-  if (p6Chart) { p6Chart.remove(); p6Chart = null; p6Series = null; }
-
-  p6Chart = LightweightCharts.createChart(wrap, {
-    width: wrap.clientWidth || 800,
-    height: 320,
-    layout: { background: { color: '#ffffff' }, textColor: '#475569' },
-    grid: { vertLines: { color: '#f1f5f9' }, horzLines: { color: '#f1f5f9' } },
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor: '#e2e8f0' },
-    timeScale: { borderColor: '#e2e8f0', timeVisible: true, secondsVisible: false },
-    handleScroll: true,
-    handleScale: true,
-  });
-
-  p6Series = p6Chart.addCandlestickSeries({
-    upColor: '#22c55e',
-    downColor: '#ef4444',
-    borderUpColor: '#16a34a',
-    borderDownColor: '#dc2626',
-    wickUpColor: '#16a34a',
-    wickDownColor: '#dc2626',
-  });
-
-  // Costruisci dati con timestamp Unix (secondi)
-  const candleData = [];
-  for (let i = 0; i < haC.length; i++) {
-    if (haC[i] == null || haO[i] == null) continue;
-    // timestamps è array di Date o epoch ms
-    const ts = typeof timestamps[i] === 'number' ? Math.floor(timestamps[i]) : Math.floor(new Date(timestamps[i]).getTime() / 1000);
-    const isUp = haC[i] >= haO[i];
-    const noLowerShadow = haL[i] === Math.min(haO[i], haC[i]);
-    const noUpperShadow = haH[i] === Math.max(haO[i], haC[i]);
-
-    candleData.push({
-      time: ts,
-      open: +haO[i].toFixed(4),
-      high: +haH[i].toFixed(4),
-      low:  +haL[i].toFixed(4),
-      close:+haC[i].toFixed(4),
-      // colore per forza trend
-      color: isUp ? (noLowerShadow ? '#22c55e' : '#86efac') : (noUpperShadow ? '#ef4444' : '#fca5a5'),
-      borderColor: isUp ? '#16a34a' : '#dc2626',
-      wickColor: isUp ? '#16a34a' : '#dc2626',
-    });
-  }
-
-  // Rimuovi duplicati per timestamp e ordina
-  const seen = new Set();
-  const unique = candleData.filter(d => { if(seen.has(d.time)) return false; seen.add(d.time); return true; });
-  unique.sort((a,b) => a.time - b.time);
-
-  p6Series.setData(unique);
-  p6Chart.timeScale().fitContent();
-
-  // Aggiorna legenda segnale
-  const last = unique[unique.length - 1];
-  const sigEl = document.getElementById('haLegendSignal');
-  if (sigEl && last) {
-    const up = last.close >= last.open;
-    const strong = up ? (last.low === Math.min(last.open, last.close)) : (last.high === Math.max(last.open, last.close));
-    sigEl.textContent = up ? (strong ? '🟢 RIALZO FORTE' : '🟢 Rialzo') : (strong ? '🔴 RIBASSO FORTE' : '🔴 Ribasso');
-    sigEl.style.color = up ? '#16a34a' : '#dc2626';
-  }
-
-  // Resize responsive
-  const ro = new ResizeObserver(() => {
-    if (p6Chart && wrap.clientWidth > 0) p6Chart.applyOptions({ width: wrap.clientWidth });
-  });
-  ro.observe(wrap);
-}
-
 async function loadData(){
   const t=document.getElementById('tkSearch').value.trim().toUpperCase()||currentTicker;
   if(!t)return;
@@ -583,39 +476,51 @@ async function loadData(){
   document.getElementById('dash').style.display='none';
 
   try{
-    const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=${currentIv}&range=${currentRange}&includePrePost=false`;
-    // Proxy multipli — tenta in sequenza fino al primo che risponde
-    const PROXY_FNS = [
-      async () => {
-        const r=await fetch('https://corsproxy.io/?'+encodeURIComponent(url),{signal:AbortSignal.timeout(9000)});
-        if(!r.ok) throw 'ko';
-        return r.json();
-      },
-      async () => {
-        const r=await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(9000)});
-        if(!r.ok) throw 'ko';
-        const t2=await r.text();
-        const j2=JSON.parse(t2);
-        return j2.contents?JSON.parse(j2.contents):j2;
-      },
-      async () => {
-        const r=await fetch('https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url),{signal:AbortSignal.timeout(9000)});
-        if(!r.ok) throw 'ko';
-        return r.json();
-      },
-    ];
-    let json=null, lastErr='';
-    for(const fn of PROXY_FNS){
+    // ── Legge raptor_chart.json (no proxy, no CORS) ──────────────
+    if(!chartJsonAdvCache){
+      document.getElementById('loadMsg').textContent='⏳ Caricamento chart data...';
       try{
-        document.getElementById('loadMsg').textContent='⏳ Caricamento '+t+'...';
-        const j=await fn();
-        const raw=j.contents?JSON.parse(j.contents):j;
-        if(raw.chart?.result?.[0]){ json=raw; break; }
-        lastErr='Nessun dato';
-      }catch(e2){ lastErr=e2?.message||String(e2); continue; }
+        const res=await fetch(CHART_JSON_ADV);
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        chartJsonAdvCache=await res.json();
+      }catch(e){ chartJsonAdvCache=null; }
     }
-    if(!json) throw new Error('Dati non disponibili per '+t+'. Verifica il simbolo (es. ENI.MI, SPY, AAPL). Dettaglio: '+lastErr);
-    const r=json.chart.result[0];
+
+    const p=tfBars(currentTF);
+    let bars=[];
+    if(chartJsonAdvCache){
+      const key=Object.keys(chartJsonAdvCache.data||{}).find(k=>k.toLowerCase()===t.toLowerCase());
+      if(key){
+        const raw=p.h?chartJsonAdvCache.data[key].h:chartJsonAdvCache.data[key].d;
+        bars=(raw||[]).slice(-p.n);
+      }
+    }
+
+    if(bars.length<10) throw new Error('Dati non disponibili per '+t+'. Attendi che raptor_chart.json venga generato da GitHub Actions (Actions → RAPTOR Chart Data → Run workflow).');
+
+    // Converti al formato atteso da processData
+    const timestamps=bars.map(b=>b[0]);
+    const opens=bars.map(b=>b[1]);
+    const highs=bars.map(b=>b[2]);
+    const lows=bars.map(b=>b[3]);
+    const closes=bars.map(b=>b[4]);
+    const vols=bars.map(b=>b[5]||0);
+    const lastClose=closes[closes.length-1];
+    const prevClose=closes[closes.length-2]||lastClose;
+
+    const r={
+      meta:{
+        regularMarketPrice:lastClose,
+        chartPreviousClose:prevClose,
+        regularMarketPreviousClose:prevClose,
+        longName:info?.n||'',
+        shortName:info?.t||t,
+        currency:'',
+        exchangeName:''
+      },
+      timestamp:timestamps,
+      indicators:{quote:[{open:opens,high:highs,low:lows,close:closes,volume:vols}]}
+    };
     processData(r,t,info);
   }catch(e){
     document.getElementById('loadMsg').style.display='none';
@@ -653,7 +558,8 @@ function processData(r,sym,info){
   if(valid.length<10)throw new Error('Dati insufficienti per questo intervallo. Prova Daily 1a o Daily 5a.');
   const cs=valid.map(x=>x.c),hs=valid.map(x=>x.h),ls=valid.map(x=>x.l);
   const n=cs.length;
-  const labels=valid.map(x=>currentIv==='1d'?fDate(x.t):fTime(x.t));
+  const isDaily=currentTF==='1w'||currentTF==='1m'||currentTF==='3m'||currentTF==='6m'||currentTF==='1y';
+  const labels=valid.map(x=>isDaily?fDate(x.t):fTime(x.t));
 
   // Indicatori
   const kama=calcKAMA(cs,10,2,30);
@@ -688,11 +594,6 @@ function processData(r,sym,info){
     haH.push(Math.max(hs[i],ho,hc));
     haL.push(Math.min(ls[i],ho,hc));
   }
-
-  // ── COSTRUISCI P6 ──────────────────────────────────────
-  // Usa timestamp Unix secondi
-  const p6Timestamps = valid.map(x => x.t); // x.t è già epoch seconds
-  buildP6(haO, haH, haL, haC, p6Timestamps);
 
   // ── PIVOT POINTS (Classico) ───────────────────────────
   const pi=n-2>=0?n-2:0;
@@ -1059,7 +960,7 @@ function processData(r,sym,info){
 // ═══════════════════════════════════════════════════════
 // RANKING LOGIC
 // ═══════════════════════════════════════════════════════
-let rankFilter='ALL', rankSort='data', rankDir=-1;
+let rankFilter='ALL', rankSort='score', rankDir=-1;
 
 function showTab(tab){
   document.getElementById('tabChart').classList.toggle('act', tab==='chart');
@@ -1086,22 +987,6 @@ function buildRankFilters(){
     b.onclick=()=>{rankFilter=c;document.querySelectorAll('.rf').forEach(x=>x.classList.remove('act'));b.classList.add('act');renderRanking();};
     bar.appendChild(b);
   });
-  // Separatore + bottoni uscita
-  bar.innerHTML+='<span style="color:#21262d;padding:0 4px">|</span>';
-  [
-    {key:'STOP',  label:'⛔ STOP',      bg:'#fee2e2',col:'#991b1b'},
-    {key:'USCITA',label:'🔴 USCITA',    bg:'#fff7ed',col:'#9a3412'},
-    {key:'ATT',   label:'🟡 ATTENZIONE',bg:'#fffbeb',col:'#92400e'},
-  ].forEach(({key,label,bg,col})=>{
-    const cnt=RANKING.filter(r=>r.uscita&&r.uscita.toUpperCase().includes(key==='ATT'?'ATTENZIONE':key)).length;
-    const b=document.createElement('button');
-    b.className='rf';
-    b.style.cssText=`background:${bg};color:${col};border-color:${col}`;
-    b.textContent=label+' ('+cnt+')';
-    b.dataset.ukey=key;
-    b.onclick=()=>{rankFilter='__'+key;document.querySelectorAll('.rf').forEach(x=>x.classList.remove('act'));b.classList.add('act');renderRanking();};
-    bar.appendChild(b);
-  });
 }
 
 function dateVal(s){
@@ -1114,46 +999,8 @@ function sortRank(col){
   renderRanking();
 }
 
-
-// ═══════════════════════════════════════
-//  EXPORT EXCEL RANKING
-// ═══════════════════════════════════════
-function exportRankingExcel(){
-  if(!RANKING||!RANKING.length){alert('Nessun dato ranking — vai su Ranking Live e calcola prima.');return;}
-  let rows=rankFilter==='ALL'?[...RANKING]:RANKING.filter(r=>r.tipo===rankFilter||r.cat===rankFilter);
-  // sort by score desc
-  rows.sort((a,b)=>(b.score||0)-(a.score||0));
-  const data=[['#','TICKER','CATEGORIA','SEGNALE','SCORE','TRENDYCATOR','ER','P/K%','AO>0','BAFFETTI','SETT%','MESE%','DATA ING.','USCITA']];
-  rows.forEach((r,i)=>{
-    data.push([
-      i+1, r.ticker||r.display||'', r.cat||r.categoria||'',
-      r.tipo||'', r.score||0, r.stato||'',
-      r.er!=null?r.er:'', r.pk!=null?r.pk:'',
-      r.ao!=null?(r.ao>0?'SI':'NO'):'', r.baff!=null?r.baff:'',
-      r.sett!=null?r.sett:'', r.mese!=null?r.mese:'',
-      r.data||r.entryDate||'', r.uscita||''
-    ]);
-  });
-  const ws=XLSX.utils.aoa_to_sheet(data);
-  ws['!cols']=[{wch:4},{wch:10},{wch:18},{wch:8},{wch:7},{wch:10},{wch:6},{wch:7},{wch:6},{wch:7},{wch:8},{wch:8},{wch:11},{wch:11}];
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'RAPTOR Ranking');
-  const now=new Date();
-  const d=now.getDate().toString().padStart(2,'0')+'_'+(now.getMonth()+1).toString().padStart(2,'0')+'_'+now.getFullYear();
-  XLSX.writeFile(wb,'RAPTOR_Advanced_Ranking_'+d+'.xlsx');
-}
-
 function renderRanking(){
-  let data;
-  if(rankFilter==='ALL') data=[...RANKING];
-  else if(rankFilter==='__STOP')   data=RANKING.filter(r=>r.uscita&&r.uscita.includes('STOP'));
-  else if(rankFilter==='__USCITA') data=RANKING.filter(r=>r.uscita&&r.uscita.includes('USCITA'));
-  else if(rankFilter==='__ATT')    data=RANKING.filter(r=>r.uscita&&r.uscita.includes('ATTENZIONE'));
-  else data=RANKING.filter(r=>r.tipo===rankFilter||r.cat===rankFilter);
-  // Per ALL ordina per data ingresso desc, altrimenti per score
-  if(rankFilter==='ALL' && rankSort==='data') {
-    data.sort((a,b)=>dateVal(String(b.data||''))-dateVal(String(a.data||'')));
-  }
+  let data=rankFilter==='ALL'?[...RANKING]:RANKING.filter(r=>r.tipo===rankFilter||r.cat===rankFilter);
   function dateVal(s){
     if(!s||s==='—') return 0;
     const p=s.split('/');
@@ -1192,7 +1039,6 @@ function renderRanking(){
       <td class="${r.mese>0?'pos':'neg'}">${r.mese>0?'+':''}${r.mese.toFixed(2)}%</td>
       <td style="color:#484f58;font-size:10px">${r.cat}</td>
       <td style="color:#30363d;font-size:9px">${r.data}</td>
-      <td>${r.uscita?`<span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;${r.uscita.includes('STOP')?'background:#fee2e2;color:#dc2626':r.uscita.includes('USCITA')?'background:#fff7ed;color:#ea580c':'background:#fffbeb;color:#92400e'}">${r.uscita}</span>`:''}</td>
     </tr>`;
   }).join('');
   if(!document.getElementById('rankFilters').children.length) buildRankFilters();
@@ -1257,7 +1103,7 @@ setTimeout(()=>{
       // Metti nella barra il simbolo Yahoo se trovato, altrimenti il ticker diretto
       searchEl.value = info ? info.y : urlTicker.toUpperCase();
       // Carica il grafico
-      setTimeout(() => loadChart(), 150);
+      setTimeout(() => loadData(), 150);
     }
   }
 }, 300);
@@ -1298,7 +1144,6 @@ setTimeout(()=>{
     <span><span class="tipo-rosso">⚪ ROSSO+</span> — inversione potenziale</span>
   </div>
   <div class="rank-filters" id="rankFilters"></div>
-  <button class="btn-excel-adv" onclick="exportRankingExcel()">⬇ Excel</button>
   <div class="rank-info" id="rankInfo">186 strumenti · Clicca su un ticker per aprirlo nel grafico</div>
   <div class="rank-wrap">
     <table class="rank-table" id="rankTable">
@@ -1317,7 +1162,6 @@ setTimeout(()=>{
           <th onclick="sortRank('mese')">MESE%</th>
           <th onclick="sortRank('cat')">CATEGORIA</th>
           <th onclick="sortRank('data')" style='cursor:pointer'>DATA ING. ↕</th>
-          <th>USCITA</th>
         </tr>
       </thead>
       <tbody id="rankBody"></tbody>
